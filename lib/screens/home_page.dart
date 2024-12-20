@@ -1,6 +1,7 @@
 // ignore_for_file: unused_local_variable
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:notification_app/screens/display_page.dart';
 import 'package:notification_app/widgets/custom_container.dart';
 import 'package:notification_app/widgets/custom_text.dart';
 import 'package:buttons_tabbar/buttons_tabbar.dart';
@@ -201,6 +202,10 @@ class _HomePageState extends ConsumerState<HomePage> {
           title: notification['title']!,
           body: notification['body']!,
           time: notification['time']!,
+          onPressed: (){
+                Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => const DisplayPage()));
+          },
         );
       },
     );

@@ -1,7 +1,6 @@
 // notification_widget.dart
 import 'package:flutter/material.dart';
-import 'package:notification_app/constants/colors.dart';
-import 'package:notification_app/screens/display_page.dart';
+import 'package:notification_app/helpers.dart';
 import 'package:notification_app/widgets/custom_text.dart';
 
 class NotificationWidget extends StatelessWidget {
@@ -11,6 +10,7 @@ class NotificationWidget extends StatelessWidget {
   final String status;
   final String severity;
   final String time;
+  final VoidCallback onPressed;
 
   const NotificationWidget({
     super.key,
@@ -20,34 +20,23 @@ class NotificationWidget extends StatelessWidget {
     required this.status,
     required this.severity,
     required this.time,
+    required this.onPressed,
   });
 
-  List<Color> _getColorsBySeverity(String severity) {
-    switch (severity.toLowerCase()) {
-      case 'high':
-        return redList;
-      case 'medium':
-        return yellowList;
-      case 'low':
-        return greyList;
-      default:
-        return greyList;
-    }
-  }
+
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final colors = _getColorsBySeverity(severity);
+    final colors = getColorsBySeverity(severity);
+    final icons = getIconsByStatus(status);
+
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: Stack(
         children: [
           GestureDetector(
-            onTap: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => const DisplayPage()));
-            },
+            onTap: onPressed,
             child: Container(
               height: screenHeight * 0.19,
               decoration: BoxDecoration(
@@ -134,11 +123,12 @@ class NotificationWidget extends StatelessWidget {
             right: 10,
             child: Row(
               children: [
-                const Icon(
-                  Icons.info,
-                  color: Colors.yellow,
-                  size: 20,
-                ),
+                // const Icon(
+                //   Icons.info,
+                //   color: Colors.yellow,
+                //   size: 20,
+                // ),
+                icons,
                 const SizedBox(width: 8),
                 EtzTest(text: status),
               ],
