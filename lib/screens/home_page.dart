@@ -66,6 +66,15 @@ class _HomePageState extends ConsumerState<HomePage> {
           'The customer\'s account has been debited but no value has been given',
       'time': '5h ago',
     },
+    {
+      'appName': 'FundGate',
+      'severity': 'Low',
+      'status': 'Resolved',
+      'title': 'Service not provided',
+      'body':
+          'The customer\'s account has been debited but no value has been given',
+      'time': '5h ago',
+    },
   ];
 
   @override
