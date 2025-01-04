@@ -251,10 +251,12 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        EtzText(
-          text: widget.appName,
-          fontWeight: FontWeight.bold,
-          fontSize: 20,
+        Center(
+          child: EtzText(
+            text: widget.appName,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
         ),
         const SizedBox(height: 8),
         EtzText(text: widget.title),
