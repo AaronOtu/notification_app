@@ -7,7 +7,7 @@ String notificationModelToJson(NotificationModel data) =>
     json.encode(data.toJson());
 
 class NotificationModel {
-  String? id;
+  String id;
   String appName;
   String title;
   String body;
@@ -16,9 +16,11 @@ class NotificationModel {
   dynamic recipients;
   bool? toAllRecipients;
   String status;
+  DateTime? createdAt;
+  DateTime? updatedAt;
 
   NotificationModel({
-    this.id,
+    required this.id,
     required this.appName,
     required this.title,
     required this.body,
@@ -27,6 +29,8 @@ class NotificationModel {
     this.recipients,
     this.toAllRecipients,
     required this.status,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
@@ -39,7 +43,7 @@ class NotificationModel {
     }
 
     return NotificationModel(
-      id: json["_id"]?.toString(),
+      id: json["_id"]?.toString() ?? '',
       appName: json["appName"]?.toString() ?? '',
       title: json["title"]?.toString() ?? '',
       body: json["body"]?.toString() ?? '',
@@ -48,6 +52,12 @@ class NotificationModel {
       recipients: recipientsData,
       toAllRecipients: json["toAllRecipients"] as bool?,
       status: json["status"]?.toString() ?? '',
+      createdAt: json["createdAt"] != null 
+          ? DateTime.parse(json["createdAt"].toString())
+          : null,
+      updatedAt: json["updatedAt"] != null 
+          ? DateTime.parse(json["updatedAt"].toString())
+          : null,
     );
   }
 
@@ -61,6 +71,8 @@ class NotificationModel {
       "channel": channel,
       "toAllRecipients": toAllRecipients,
       "status": status,
+      "createdAt": createdAt?.toIso8601String(),
+      "updatedAt": updatedAt?.toIso8601String(),
     };
 
     if (recipients is String) {

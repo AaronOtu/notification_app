@@ -10,6 +10,7 @@ class NotificationWidget extends StatelessWidget {
   final String status;
   final String severity;
   final String time;
+ 
   final VoidCallback onPressed;
 
   const NotificationWidget({
@@ -19,6 +20,7 @@ class NotificationWidget extends StatelessWidget {
     required this.body,
     required this.status,
     required this.severity,
+   
     required this.time,
     required this.onPressed,
   });
@@ -71,7 +73,7 @@ class NotificationWidget extends StatelessWidget {
                           children: [
                             Icon(Icons.apps, color: Colors.blue.shade700),
                             const SizedBox(width: 8),
-                            EtzTest(
+                            EtzText(
                               text: appName,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -83,7 +85,7 @@ class NotificationWidget extends StatelessWidget {
                           children: [
                             Icon(Icons.warning, color: Colors.red.shade700),
                             const SizedBox(width: 8),
-                            EtzTest(
+                            EtzText(
                               text: severity,
                               color: Colors.red.shade700,
                             ),
@@ -96,22 +98,24 @@ class NotificationWidget extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
-                          child: EtzTest(
+                          child: EtzText(
                             text: title,
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        EtzTest(
+                        EtzText(
                           text: time,
                           color: Colors.grey.shade600,
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    EtzTest(
+                    EtzText(
                       text: body,
                       color: Colors.grey.shade700,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -130,7 +134,7 @@ class NotificationWidget extends StatelessWidget {
                 // ),
                 icons,
                 const SizedBox(width: 8),
-                EtzTest(text: status),
+                EtzText(text: status),
               ],
             ),
           ),

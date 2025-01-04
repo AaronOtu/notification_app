@@ -7,9 +7,9 @@ List<Color> redList = [
 ];
 
 List<Color> greyList = [
-  Color(0xFFE8F5E9),
-  Color(0xFFC8E6C9),
-  Color(0xFFA5D6A7).withOpacity(0.5),
+  Color(0xFFF5F5F5),
+  Color(0xFFE0E0E0),
+  Color(0xFFBDBDBD).withOpacity(0.5),
 ];
 
 List<Color> yellowList = [
