@@ -47,3 +47,4 @@ app.*.map.json
 #files to be ignored
 test.txt
 test_screen.dart
+loader.dart

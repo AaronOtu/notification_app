@@ -1,6 +1,10 @@
-
-
 import 'package:flutter/material.dart';
 
-final Icon pendingIcon = Icon(Icons.schedule,color: Colors.yellow,);
-final Icon resolvedIcon = Icon(Icons.check_circle, color: Colors.green,);
+// image Icons
+final Image highIcon = Image(image: AssetImage('assets/high.png'));
+final Image mediumIcon = Image(image: AssetImage('assets/medium.png'));
+final Image lowIcon = Image(image: AssetImage('assets/low.png'));
+
+//image Icons for stats
+final Image pendingIcon = Image(image: AssetImage('assets/pendings.png'));
+final Image resolvedIcon = Image(image: AssetImage('assets/resolved.png'));

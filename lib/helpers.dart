@@ -15,7 +15,7 @@ List<Color> getColorsBySeverity(String severity) {
   }
 }
 
-Icon getIconsByStatus(String status) {
+Image getIconsByStatus(String status) {
   switch (status.toLowerCase()) {
     case 'pending':
       return pendingIcon;
@@ -23,5 +23,19 @@ Icon getIconsByStatus(String status) {
       return resolvedIcon;
     default:
       return pendingIcon;
+  }
+}
+
+Image getImageBySeverity(String severity){
+  switch(severity.toLowerCase()){
+    case 'high':
+      return highIcon;
+    case 'medium':
+      return mediumIcon;
+    case 'low':
+       return lowIcon;
+    default:
+        return lowIcon;       
+
   }
 }

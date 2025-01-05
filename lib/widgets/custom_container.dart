@@ -1,4 +1,6 @@
 // notification_widget.dart
+// ignore_for_file: unused_local_variable, deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:notification_app/helpers.dart';
 import 'package:notification_app/widgets/custom_text.dart';
@@ -30,9 +32,12 @@ class NotificationWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
     final colors = getColorsBySeverity(severity);
-    final icons = getIconsByStatus(status);
+    final statusIcons = getIconsByStatus(status);
+    final imageIcon = getImageBySeverity(severity);
 
+  
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: Stack(
@@ -41,6 +46,7 @@ class NotificationWidget extends StatelessWidget {
             onTap: onPressed,
             child: Container(
               height: screenHeight * 0.19,
+              //width: screenWidth * 1.0,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: colors,
@@ -83,11 +89,13 @@ class NotificationWidget extends StatelessWidget {
                         ),
                         Row(
                           children: [
-                            Icon(Icons.warning, color: Colors.red.shade700),
+                             //Image(image: ,)
+                             FittedBox(child: SizedBox(height:20, width: 20,  child: imageIcon)),
+                            //Icon(Icons.warning, color: Colors.red.shade700),
                             const SizedBox(width: 8),
                             EtzText(
                               text: severity,
-                              color: Colors.red.shade700,
+                              color: Colors.black,
                             ),
                           ],
                         ),
@@ -114,8 +122,9 @@ class NotificationWidget extends StatelessWidget {
                     EtzText(
                       text: body,
                       color: Colors.grey.shade700,
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
+                      fontSize: 16,
                     ),
                   ],
                 ),
@@ -132,7 +141,9 @@ class NotificationWidget extends StatelessWidget {
                 //   color: Colors.yellow,
                 //   size: 20,
                 // ),
-                icons,
+
+                //icons,
+                FittedBox(child: SizedBox(height:20, width: 20,  child: statusIcons)),
                 const SizedBox(width: 8),
                 EtzText(text: status),
               ],

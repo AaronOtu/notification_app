@@ -1,4 +1,7 @@
+// ignore_for_file: unused_element
+
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:notification_app/api/models/email_response_model.dart';
 import 'package:notification_app/api/models/notification_model.dart';
@@ -8,7 +11,33 @@ import 'package:notification_app/api/models/sms_response.dart';
 import 'package:notification_app/api/models/telegram_respone.dart';
 
 class ApiService {
-  final String endpoint = 'https://sandbox-api.etranzact.com.gh/notify/api/';
+  final String endpoint = 'https://sandbox-api.etranzact.com.gh/notify/api';
+  
+  
+
+  Future<T?> _handleNetworkCall<T>(Future<T> Function() apiCall) async {
+    try {
+      return await apiCall();
+    } on SocketException catch (e) {
+      log('Network Error: ${e.message}');
+      if (e.message.contains('Failed host lookup')) {
+        log('Cannot reach the server. Please check:\n'
+            '1. Your internet connection\n'
+            '2. The API endpoint URL is correct\n'
+            '3. The server is accessible');
+      }
+      rethrow;
+    } on HttpException catch (e) {
+      log('HTTP Error: ${e.message}');
+      rethrow;
+    } on FormatException catch (e) {
+      log('Data Format Error: ${e.message}');
+      rethrow;
+    } catch (e) {
+      log('Unexpected Error: $e');
+      rethrow;
+    }
+  }
 
 // send notification
   Future<NotificationModel?> sendNotification({
@@ -54,6 +83,7 @@ class ApiService {
 //get all notification
   Future<List<NotificationModel>> fetchAlerts() async {
     try {
+     
       final response = await http.get(Uri.parse('$endpoint/alerts'));
 
       if (response.statusCode == 200) {
