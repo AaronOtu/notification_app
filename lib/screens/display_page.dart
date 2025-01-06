@@ -1,10 +1,12 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:notification_app/api/api_service.dart';
 import 'package:notification_app/api/models/notification_model.dart';
 import 'package:notification_app/widgets/custom_text.dart';
-
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+import 'package:notification_app/widgets/loader.dart';
 
 // --------------------------- Providers ---------------------------
 
@@ -124,6 +126,10 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
     });
   }
 
+  Future<void> _handleRefresh() async {
+    await ref.read(notificationDataProvider.notifier).fetchNotifications();
+  }
+
   // --------------------------- Resolve Alert Dialog ---------------------------
   Future<void> _showResolveDialog() async {
     final alertNotifier = ref.read(alertStatusProvider.notifier);
@@ -159,7 +165,6 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
           await ref.read(notificationDataProvider.notifier).fetchNotifications();
           if (mounted) {
             _showSnackBar('Alert resolved successfully!');
-            // Pop back to homepage with refresh flag
             Navigator.of(context).pop(true);
           }
         } else if (mounted) {
@@ -190,59 +195,55 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final alertState = ref.watch(alertStatusProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const EtzText(
-          text: 'Notification Details',
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
+    return XcelLoader(
+      isLoading: alertState.isLoading,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const EtzText(
+            text: 'Notification Details',
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+          backgroundColor: Colors.white,
         ),
-        backgroundColor: Colors.white,
-      ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await ref.read(notificationDataProvider.notifier).fetchNotifications();
-        },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Container(
-              width: screenWidth * 0.9,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.shade300,
-                    blurRadius: 5,
-                  ),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(),
-                        const SizedBox(height: 20),
-                        _buildInfoRow('Severity', widget.severity),
-                        const SizedBox(height: 20),
-                        _buildDescriptionRow(),
-                        const SizedBox(height: 20),
-                        _buildInfoRowWithDate('Time', widget.timeCreated),
-                        const SizedBox(height: 20),
-                        _buildInfoRow('Status', alertState.status),
-                        const SizedBox(height: 20),
-                        if (alertState.status == 'PENDING') _buildResolveSwitch(),
-                      ],
+        body: LiquidPullToRefresh(
+          onRefresh: _handleRefresh,
+          showChildOpacityTransition: false,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Container(
+                width: screenWidth * 0.9,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.shade300,
+                      blurRadius: 5,
                     ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHeader(),
+                      const SizedBox(height: 20),
+                      _buildInfoRow('Severity', widget.severity),
+                      const SizedBox(height: 20),
+                      _buildDescriptionRow(),
+                      const SizedBox(height: 20),
+                      _buildInfoRowWithDate('Time', widget.timeCreated),
+                      const SizedBox(height: 20),
+                      _buildInfoRow('Status', alertState.status),
+                      const SizedBox(height: 20),
+                      if (alertState.status == 'PENDING') _buildResolveSwitch(),
+                    ],
                   ),
-                  if (alertState.isLoading)
-                    const Center(child: CircularProgressIndicator()),
-                ],
+                ),
               ),
             ),
           ),
@@ -303,7 +304,7 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
   }
 
   Widget _buildInfoRowWithDate(String label, DateTime date) {
-    String formattedDate = DateFormat('dd MMM yyyy hh:mm a').format(date); // Format DateTime to string
+    String formattedDate = DateFormat('dd MMM yyyy hh:mm a').format(date);
     return _buildInfoRow(label, formattedDate);
   }
 

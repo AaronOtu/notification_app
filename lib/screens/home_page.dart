@@ -168,30 +168,33 @@ String _formatTime(DateTime? dateTime) {
 
   Widget _buildDrawer() {
     final drawerItems = [
-      {'icon': Icons.email, 'title': 'Email', 'screen': const EmailPage()},
-      {'icon': Icons.sms, 'title': 'SMS', 'screen': const SmsPage()},
-      {'icon': Icons.telegram, 'title': 'Telegram', 'screen': const TelegramPage()},
+      {'icon': const AssetImage('assets/mail.png'), 'title': 'Email', 'screen': const EmailPage()},
+      {'icon': const AssetImage('assets/chat.png'), 'title': 'SMS', 'screen': const SmsPage()},
+      {'icon': const AssetImage('assets/telegram.png'), 'title': 'Telegram', 'screen': const TelegramPage()},
     ];
 
     return Drawer(
+      backgroundColor: Colors.white,
+
       child: ListView(
         children: [
           const DrawerHeader(
             decoration: BoxDecoration(
-              color: Colors.blue,
+              color: Colors.white,
             ),
             child: Center(
               child: Text(
-                'Notification Settings',
+                ' Settings',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Colors.black,
                   fontSize: 24,
                 ),
               ),
             ),
           ),
           ...drawerItems.map((item) => ListTile(
-                leading: Icon(item['icon'] as IconData),
+                //leading: Icon(item['icon'] as IconData),
+                leading: Image(image: item['icon'] as AssetImage, width: 24, height:24,),
                 title: Text(item['title'] as String),
                 onTap: () => _navigateToScreen(item['screen'] as Widget),
               )),

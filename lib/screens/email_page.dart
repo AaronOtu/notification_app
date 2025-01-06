@@ -1,6 +1,9 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notification_app/api/notifiers/email_notifiers.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+import 'package:notification_app/widgets/loader.dart';
 
 class EmailPage extends ConsumerStatefulWidget {
   const EmailPage({super.key});
@@ -11,6 +14,7 @@ class EmailPage extends ConsumerStatefulWidget {
 
 class _EmailPageState extends ConsumerState<EmailPage> {
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   bool _isLoading = false;
 
   @override
@@ -22,10 +26,11 @@ class _EmailPageState extends ConsumerState<EmailPage> {
   @override
   void dispose() {
     _emailController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
-  Future<void> _refreshEmails() async {
+  Future<void> _handleRefresh() async {
     setState(() => _isLoading = true);
     await ref.read(emailsProvider.notifier).fetchEmails();
     setState(() => _isLoading = false);
@@ -142,7 +147,6 @@ class _EmailPageState extends ConsumerState<EmailPage> {
             icon: const Icon(Icons.delete),
             label: const Text('Delete'),
             style: ElevatedButton.styleFrom(
-              //backgroundColor: Colors.red,
               foregroundColor: Colors.grey,
             ),
           ),
@@ -154,137 +158,170 @@ class _EmailPageState extends ConsumerState<EmailPage> {
   @override
   Widget build(BuildContext context) {
     final emails = ref.watch(emailsProvider);
+    final filteredEmails = emails.where((email) => 
+      email.email?.toLowerCase().contains(_searchController.text.toLowerCase()) ?? false
+    ).toList();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Email Management'),
-        elevation: 2,
-        actions: [
-          IconButton(
-            icon: _isLoading 
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : const Icon(Icons.refresh),
-            onPressed: _isLoading ? null : _refreshEmails,
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  spreadRadius: 1,
-                  blurRadius: 5,
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: _showAddEmailDialog,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Email'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '${emails.length} Emails',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.bold,
+    return XcelLoader(
+      isLoading: _isLoading,
+      child: Scaffold(
+       backgroundColor:Colors.white,
+        appBar: AppBar(
+          backgroundColor:Colors.white,
+          title: const Text('Email Management'),
+          elevation: 2,
+        ),
+        body: LiquidPullToRefresh(
+          onRefresh: _handleRefresh,
+          showChildOpacityTransition: false,
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 5,
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: emails.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.mail_outline,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No emails added yet',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey[600],
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Search emails...',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
+                        onChanged: (value) => setState(() {}),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Stack(
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: _showAddEmailDialog,
+                          icon: const Icon(Icons.email),
+                          label: const Text('New Email'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12
+                            ),
+                          ),
+                        ),
+                        if (emails.isNotEmpty)
+                          Positioned(
+                            right: 0,
+                            top: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                '${emails.length}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: emails.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final email = emails[index];
-                      return Card(
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          leading: const CircleAvatar(
-                            backgroundColor: Colors.blue,
-                            child: Icon(
-                              Icons.mail,
-                              color: Colors.white,
-                            ),
-                          ),
-                          title: Text(
-                            email.email ?? 'No email',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete_outline),
-                            color: Colors.red,
-                            onPressed: () => _showDeleteEmailDialog(
-                              email.id ?? '',
-                              email.email ?? '',
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: filteredEmails.isEmpty
+                    ? _buildEmptyState()
+                    : _buildEmailList(filteredEmails),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.mail_outline,
+            size: 64,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _searchController.text.isEmpty 
+                ? 'No emails added yet'
+                : 'No matching emails found',
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.grey[600],
+            ),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildEmailList(List<dynamic> emails) {
+    return ListView.separated(
+      padding: const EdgeInsets.all(16),
+      itemCount: emails.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 8),
+      itemBuilder: (context, index) {
+        final email = emails[index];
+        return Card(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
+            ),
+            leading: const CircleAvatar(
+              backgroundColor: Colors.blue,
+              child: Icon(
+                Icons.mail,
+                color: Colors.white,
+              ),
+            ),
+            title: Text(
+              email.email ?? 'No email',
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete_outline),
+              color: Colors.red,
+              onPressed: () => _showDeleteEmailDialog(
+                email.id ?? '',
+                email.email ?? '',
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
+
