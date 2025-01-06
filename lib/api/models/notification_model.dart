@@ -16,7 +16,7 @@ class NotificationModel {
   dynamic recipients;
   bool? toAllRecipients;
   String status;
-  DateTime? createdAt;
+  DateTime createdAt;
   DateTime? updatedAt;
 
   NotificationModel({
@@ -29,7 +29,7 @@ class NotificationModel {
     this.recipients,
     this.toAllRecipients,
     required this.status,
-    this.createdAt,
+    required this.createdAt,
     this.updatedAt,
   });
 
@@ -41,6 +41,23 @@ class NotificationModel {
       recipientsData =
           Recipients.fromJson(json["recipients"] as Map<String, dynamic>);
     }
+     DateTime parseDate(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty) {
+      return DateTime.now(); // Return current date if null or empty
+    }
+
+    try {
+      // Attempt to parse the date in the ISO 8601 format
+      return DateTime.parse(dateStr);
+    } catch (e) {
+      // If parsing fails, fallback to a custom format (e.g., without 'Z')
+      try {
+        return DateTime.parse(dateStr.replaceFirst('Z', '')); // Remove 'Z' for parsing
+      } catch (_) {
+        return DateTime.now(); // Return current date if both attempts fail
+      }
+    }
+  }
 
     return NotificationModel(
       id: json["_id"]?.toString() ?? '',
@@ -52,9 +69,9 @@ class NotificationModel {
       recipients: recipientsData,
       toAllRecipients: json["toAllRecipients"] as bool?,
       status: json["status"]?.toString() ?? '',
-      createdAt: json["createdAt"] != null 
-          ? DateTime.parse(json["createdAt"].toString())
-          : null,
+      createdAt: //json["createdAt"] != null 
+           parseDate(json["createdAt"].toString()),
+          //: null,
       updatedAt: json["updatedAt"] != null 
           ? DateTime.parse(json["updatedAt"].toString())
           : null,
@@ -71,7 +88,7 @@ class NotificationModel {
       "channel": channel,
       "toAllRecipients": toAllRecipients,
       "status": status,
-      "createdAt": createdAt?.toIso8601String(),
+      "createdAt": createdAt.toIso8601String(),
       "updatedAt": updatedAt?.toIso8601String(),
     };
 

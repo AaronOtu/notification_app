@@ -8,6 +8,7 @@ import 'package:notification_app/screens/sms_page.dart';
 import 'package:notification_app/screens/telegram_page.dart';
 import 'package:notification_app/widgets/custom_container.dart';
 import 'package:notification_app/widgets/custom_text.dart';
+import 'package:notification_app/widgets/loader.dart';
 import 'package:buttons_tabbar/buttons_tabbar.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 
@@ -78,6 +79,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           body: notification.body,
           time: _formatTime(notification.createdAt),
           id: notification.id,
+          timeCreated: notification.createdAt,
         ),
       ),
     );
@@ -88,38 +90,62 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  String _formatTime(DateTime? dateTime) {
-    if (dateTime == null) return 'N/A';
-    // Add your time formatting logic here
-    return '5hr'; // Replace with actual time formatting
-  }
+String _formatTime(DateTime? dateTime) {
+  if (dateTime == null) return 'N/A';
 
+  final now = DateTime.now();
+  final difference = now.difference(dateTime);
+
+  if (difference.inSeconds < 60) {
+    return difference.inSeconds == 1 ? '1 second ago' : '${difference.inSeconds} seconds ago';
+  } else if (difference.inMinutes < 60) {
+    return difference.inMinutes == 1 ? '1 minute ago' : '${difference.inMinutes} minutes ago';
+  } else if (difference.inHours < 24) {
+    return difference.inHours == 1 ? '1 hour ago' : '${difference.inHours} hours ago';
+  } else if (difference.inDays < 7) {
+    return difference.inDays == 1 ? '1 day ago' : '${difference.inDays} days ago';
+  } else if (difference.inDays < 30) {
+    final weeks = (difference.inDays / 7).floor();
+    return weeks == 1 ? '1 week ago' : '$weeks weeks ago';
+  } else if (difference.inDays < 365) {
+    final months = (difference.inDays / 30).floor();
+    return months == 1 ? '1 month ago' : '$months months ago';
+  } else {
+    final years = (difference.inDays / 365).floor();
+    return years == 1 ? '1 year ago' : '$years years ago';
+  }
+}
   // --------------------------- Build Methods ---------------------------
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: _buildAppBar(),
-      drawer: _buildDrawer(),
-      body: LiquidPullToRefresh(
-        onRefresh: _handleRefresh,
-        child: SafeArea(
-          child: DefaultTabController(
-            length: 3,
-            child: Column(
-              children: [
-                _buildTabBar(),
-                Expanded(
-                  child: TabBarView(
-                    children: <Widget>[
-                      _buildNotificationList('View All'),
-                      _buildNotificationList('Pending'),
-                      _buildNotificationList('Resolved'),
-                    ],
+    final notificationsState = ref.watch(notificationStateProvider);
+    
+    return XcelLoader(
+      isLoading: notificationsState is AsyncLoading,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: _buildAppBar(),
+        drawer: _buildDrawer(),
+        body: LiquidPullToRefresh(
+          onRefresh: _handleRefresh,
+          child: SafeArea(
+            child: DefaultTabController(
+              length: 3,
+              child: Column(
+                children: [
+                  _buildTabBar(),
+                  Expanded(
+                    child: TabBarView(
+                      children: <Widget>[
+                        _buildNotificationList('View All'),
+                        _buildNotificationList('Pending'),
+                        _buildNotificationList('Resolved'),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -209,7 +235,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             notifications,
             status,
           ),
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const SizedBox(),
           error: (error, stackTrace) => _buildErrorWidget(error),
         );
       },
@@ -243,6 +269,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           title: notification.title,
           body: notification.body,
           time: _formatTime(notification.createdAt),
+          timeCreated: notification.createdAt,
           onPressed: () => _navigateToNotificationDetails(notification),
         );
       },

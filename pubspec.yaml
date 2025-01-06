@@ -42,6 +42,9 @@ dependencies:
   pretty_json: ^2.0.0
   liquid_pull_to_refresh: ^3.0.1
   material_dialogs: ^1.1.5
+  intl: ^0.18.1
+  logger: ^2.2.0
+  pretty_logger: ^1.0.0
   #modal_progress_hud_nsn: ^0.2.0
 
 dev_dependencies:
@@ -74,6 +77,9 @@ flutter:
     - assets/medium.png
     - assets/pendings.png
     - assets/resolved.png
+    - assets/app_icon_buss.png
+    - assets/app_icon.png
+    - assets/app.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -9,11 +9,11 @@ import 'dart:developer';
 
 import 'package:notification_app/api/models/sms_response.dart';
 import 'package:notification_app/api/models/telegram_respone.dart';
+import 'package:pretty_logger/pretty_logger.dart';
+//import 'package:logger/logger.dart';
 
 class ApiService {
   final String endpoint = 'https://sandbox-api.etranzact.com.gh/notify/api';
-  
-  
 
   Future<T?> _handleNetworkCall<T>(Future<T> Function() apiCall) async {
     try {
@@ -83,12 +83,14 @@ class ApiService {
 //get all notification
   Future<List<NotificationModel>> fetchAlerts() async {
     try {
-     
       final response = await http.get(Uri.parse('$endpoint/alerts'));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> decodedBody = jsonDecode(response.body);
-        log(response.body);
+        //log(response.body);
+        //Logger(level: Level.verbose, printer:PrettyPrinter()).i(response.body);
+        PLog.cyan(response.body);
+
         if (decodedBody.containsKey('response')) {
           final List<dynamic> data = decodedBody['response'];
           return data
@@ -133,185 +135,185 @@ class ApiService {
     }
   }
 
-Future<List<Response>> fetchEmails() async {
-  try {
-    final response = await http.get(Uri.parse('$endpoint/email'));
+  Future<List<Response>> fetchEmails() async {
+    try {
+      final response = await http.get(Uri.parse('$endpoint/email'));
 
-    if (response.statusCode == 200) {
-      log('Response Body: ${response.body}');
-      final EmailModel emailModel = emailModelFromJson(response.body);
-      return emailModel.response ?? [];
+      if (response.statusCode == 200) {
+        log('Response Body: ${response.body}');
+        final EmailModel emailModel = emailModelFromJson(response.body);
+        return emailModel.response ?? [];
+      }
+
+      throw Exception('Failed to fetch emails: ${response.statusCode}');
+    } catch (e) {
+      log('Error fetching emails: $e');
+      rethrow;
     }
-
-    throw Exception('Failed to fetch emails: ${response.statusCode}');
-  } catch (e) {
-    log('Error fetching emails: $e');
-    rethrow;
   }
-}
 
-/// Add a new email
-Future<EmailModel> addEmail(String email) async {
-  try {
-    final response = await http.post(
-      Uri.parse('$endpoint/email'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'value': email}),
-    );
+  /// Add a new email
+  Future<EmailModel> addEmail(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$endpoint/email'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'value': email}),
+      );
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      log('Email added: ${response.body}');
-      return EmailModel.fromJson(data);
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        log('Email added: ${response.body}');
+        return EmailModel.fromJson(data);
+      }
+
+      throw Exception('Failed to add email: ${response.statusCode}');
+    } catch (e) {
+      log('Error adding email: $e');
+      rethrow;
     }
-
-    throw Exception('Failed to add email: ${response.statusCode}');
-  } catch (e) {
-    log('Error adding email: $e');
-    rethrow;
   }
-}
 
-/// Delete an email by ID
-Future<void> deleteEmail(String id) async {
-  try {
-    final response = await http.delete(
-      Uri.parse('$endpoint/email/$id'),
-      headers: {'Content-Type': 'application/json'},
-    );
+  /// Delete an email by ID
+  Future<void> deleteEmail(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$endpoint/email/$id'),
+        headers: {'Content-Type': 'application/json'},
+      );
 
-    if (response.statusCode == 200 ) {
-      log('Email with ID $id deleted successfully');
-      return;
+      if (response.statusCode == 200) {
+        log('Email with ID $id deleted successfully');
+        return;
+      }
+
+      throw Exception('Failed to delete email: ${response.statusCode}');
+    } catch (e) {
+      log('Error deleting email: $e');
+      rethrow;
     }
-
-    throw Exception('Failed to delete email: ${response.statusCode}');
-  } catch (e) {
-    log('Error deleting email: $e');
-    rethrow;
   }
-}
 
 //get all SMS
-Future<List<ResponseSms>> fetchSms() async {
-  try {
-    final response = await http.get(Uri.parse('$endpoint/sms'));
+  Future<List<ResponseSms>> fetchSms() async {
+    try {
+      final response = await http.get(Uri.parse('$endpoint/sms'));
 
-    if (response.statusCode == 200) {
-      log('Response Body: ${response.body}');
-      final SmsModel smsModel = smsModelFromJson(response.body);
-      return smsModel.response ?? [];
+      if (response.statusCode == 200) {
+        log('Response Body: ${response.body}');
+        final SmsModel smsModel = smsModelFromJson(response.body);
+        return smsModel.response ?? [];
+      }
+
+      throw Exception('Failed to fetch sms: ${response.statusCode}');
+    } catch (e) {
+      log('Error fetching sms: $e');
+      rethrow;
     }
-
-    throw Exception('Failed to fetch sms: ${response.statusCode}');
-  } catch (e) {
-    log('Error fetching sms: $e');
-    rethrow;
   }
-}
 
-/// Add a new SMS
-Future<SmsModel> addSms(String sms) async {
-  try {
-    final response = await http.post(
-      Uri.parse('$endpoint/sms'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'value': sms}),
-    );
+  /// Add a new SMS
+  Future<SmsModel> addSms(String sms) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$endpoint/sms'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'value': sms}),
+      );
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      log('Sms added: ${response.body}');
-      return SmsModel.fromJson(data);
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        log('Sms added: ${response.body}');
+        return SmsModel.fromJson(data);
+      }
+
+      throw Exception('Failed to add sms: ${response.statusCode}');
+    } catch (e) {
+      log('Error adding sms: $e');
+      rethrow;
     }
-
-    throw Exception('Failed to add sms: ${response.statusCode}');
-  } catch (e) {
-    log('Error adding sms: $e');
-    rethrow;
   }
-}
 
-/// Delete an SMS by ID
-Future<void> deleteSms(String id) async {
-  try {
-    final response = await http.delete(
-      Uri.parse('$endpoint/sms/$id'),
-      headers: {'Content-Type': 'application/json'},
-    );
+  /// Delete an SMS by ID
+  Future<void> deleteSms(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$endpoint/sms/$id'),
+        headers: {'Content-Type': 'application/json'},
+      );
 
-    if (response.statusCode == 200 ) {
-      log('Sms with ID $id deleted successfully');
-      return;
+      if (response.statusCode == 200) {
+        log('Sms with ID $id deleted successfully');
+        return;
+      }
+
+      throw Exception('Failed to delete sms: ${response.statusCode}');
+    } catch (e) {
+      log('Error deleting sms: $e');
+      rethrow;
     }
-
-    throw Exception('Failed to delete sms: ${response.statusCode}');
-  } catch (e) {
-    log('Error deleting sms: $e');
-    rethrow;
   }
-}
 
 // Get all Telegram messages
-Future<List<ResponseTelegram>> fetchTelegram() async {
-  try {
-    final response = await http.get(Uri.parse('$endpoint/telegram'));
+  Future<List<ResponseTelegram>> fetchTelegram() async {
+    try {
+      final response = await http.get(Uri.parse('$endpoint/telegram'));
 
-    if (response.statusCode == 200) {
-      log('Response Body: ${response.body}');
-      final TelegramModel telegramModel = telegramModelFromJson(response.body);
-      return telegramModel.response ?? [];
+      if (response.statusCode == 200) {
+        log('Response Body: ${response.body}');
+        final TelegramModel telegramModel =
+            telegramModelFromJson(response.body);
+        return telegramModel.response ?? [];
+      }
+
+      throw Exception(
+          'Failed to fetch telegram messages: ${response.statusCode}');
+    } catch (e) {
+      log('Error fetching telegram messages: $e');
+      rethrow;
     }
-
-    throw Exception('Failed to fetch telegram messages: ${response.statusCode}');
-  } catch (e) {
-    log('Error fetching telegram messages: $e');
-    rethrow;
   }
-}
 
-/// Add a new Telegram message
-Future<TelegramModel> addTelegram(String telegram) async {
-  try {
-    final response = await http.post(
-      Uri.parse('$endpoint/telegram'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'value': telegram}),
-    );
+  /// Add a new Telegram message
+  Future<TelegramModel> addTelegram(String telegram) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$endpoint/telegram'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'value': telegram}),
+      );
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      log('Telegram message added: ${response.body}');
-      return TelegramModel.fromJson(data);
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        log('Telegram message added: ${response.body}');
+        return TelegramModel.fromJson(data);
+      }
+
+      throw Exception('Failed to add telegram message: ${response.statusCode}');
+    } catch (e) {
+      log('Error adding telegram message: $e');
+      rethrow;
     }
-
-    throw Exception('Failed to add telegram message: ${response.statusCode}');
-  } catch (e) {
-    log('Error adding telegram message: $e');
-    rethrow;
   }
-}
 
-/// Delete a Telegram message by ID
-Future<void> deleteTelegram(String id) async {
-  try {
-    final response = await http.delete(
-      Uri.parse('$endpoint/telegram/$id'),
-      headers: {'Content-Type': 'application/json'},
-    );
+  /// Delete a Telegram message by ID
+  Future<void> deleteTelegram(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$endpoint/telegram/$id'),
+        headers: {'Content-Type': 'application/json'},
+      );
 
-    if (response.statusCode == 200) {
-      log('Telegram message with ID $id deleted successfully');
-      return;
+      if (response.statusCode == 200) {
+        log('Telegram message with ID $id deleted successfully');
+        return;
+      }
+
+      throw Exception(
+          'Failed to delete telegram message: ${response.statusCode}');
+    } catch (e) {
+      log('Error deleting telegram message: $e');
+      rethrow;
     }
-
-    throw Exception('Failed to delete telegram message: ${response.statusCode}');
-  } catch (e) {
-    log('Error deleting telegram message: $e');
-    rethrow;
   }
-}
-
-
-
 }

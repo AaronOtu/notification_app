@@ -2,6 +2,7 @@
 // ignore_for_file: unused_local_variable, deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:notification_app/helpers.dart';
 import 'package:notification_app/widgets/custom_text.dart';
 
@@ -12,7 +13,8 @@ class NotificationWidget extends StatelessWidget {
   final String status;
   final String severity;
   final String time;
- 
+  final DateTime timeCreated;
+
   final VoidCallback onPressed;
 
   const NotificationWidget({
@@ -22,12 +24,10 @@ class NotificationWidget extends StatelessWidget {
     required this.body,
     required this.status,
     required this.severity,
-   
     required this.time,
     required this.onPressed,
+    required this.timeCreated,
   });
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +37,6 @@ class NotificationWidget extends StatelessWidget {
     final statusIcons = getIconsByStatus(status);
     final imageIcon = getImageBySeverity(severity);
 
-  
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: Stack(
@@ -77,21 +76,26 @@ class NotificationWidget extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.apps, color: Colors.blue.shade700),
+                            FittedBox(
+                                child: SizedBox(
+                                    height: 30,
+                                    width: 30,
+                                    child: Image(
+                                        image: AssetImage('assets/app.png')))),
                             const SizedBox(width: 8),
                             EtzText(
                               text: appName,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Colors.blue.shade700,
+                              color: Colors.black,
                             ),
                           ],
                         ),
                         Row(
                           children: [
-                             //Image(image: ,)
-                             FittedBox(child: SizedBox(height:20, width: 20,  child: imageIcon)),
-                            //Icon(Icons.warning, color: Colors.red.shade700),
+                            FittedBox(
+                                child: SizedBox(
+                                    height: 20, width: 20, child: imageIcon)),
                             const SizedBox(width: 8),
                             EtzText(
                               text: severity,
@@ -107,10 +111,10 @@ class NotificationWidget extends StatelessWidget {
                       children: [
                         Expanded(
                           child: EtzText(
-                            text: title,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                              text: title,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              overflow: TextOverflow.ellipsis),
                         ),
                         EtzText(
                           text: time,
@@ -136,16 +140,21 @@ class NotificationWidget extends StatelessWidget {
             right: 10,
             child: Row(
               children: [
-                // const Icon(
-                //   Icons.info,
-                //   color: Colors.yellow,
-                //   size: 20,
-                // ),
-
-                //icons,
-                FittedBox(child: SizedBox(height:20, width: 20,  child: statusIcons)),
+                FittedBox(
+                    child: SizedBox(height: 20, width: 20, child: statusIcons)),
                 const SizedBox(width: 8),
                 EtzText(text: status),
+              ],
+            ),
+          ),
+          Positioned(
+            bottom: 10,
+            left: 10,
+            child: Row(
+              children: [
+                EtzText(
+                    text:
+                        DateFormat('dd MMM yyyy hh:mm a').format(timeCreated)),
               ],
             ),
           ),

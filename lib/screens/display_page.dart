@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:notification_app/api/api_service.dart';
 import 'package:notification_app/api/models/notification_model.dart';
 import 'package:notification_app/widgets/custom_text.dart';
+
 
 // --------------------------- Providers ---------------------------
 
@@ -95,6 +97,7 @@ class DisplayPage extends ConsumerStatefulWidget {
   final String body;
   final String time;
   final String id;
+  final DateTime timeCreated;
 
   const DisplayPage({
     super.key,
@@ -105,6 +108,7 @@ class DisplayPage extends ConsumerStatefulWidget {
     required this.body,
     required this.time,
     required this.id,
+    required this.timeCreated,
   });
 
   @override
@@ -228,7 +232,7 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
                         const SizedBox(height: 20),
                         _buildDescriptionRow(),
                         const SizedBox(height: 20),
-                        _buildInfoRow('Time', widget.time),
+                        _buildInfoRowWithDate('Time', widget.timeCreated),
                         const SizedBox(height: 20),
                         _buildInfoRow('Status', alertState.status),
                         const SizedBox(height: 20),
@@ -296,6 +300,11 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
         ),
       ],
     );
+  }
+
+  Widget _buildInfoRowWithDate(String label, DateTime date) {
+    String formattedDate = DateFormat('dd MMM yyyy hh:mm a').format(date); // Format DateTime to string
+    return _buildInfoRow(label, formattedDate);
   }
 
   Widget _buildResolveSwitch() {
