@@ -316,4 +316,11 @@ class ApiService {
       rethrow;
     }
   }
+//search by severity,status and appName
+
+//Future<List<NotificationModel>> 
+
+
+
+
 }

@@ -17,7 +17,7 @@ class NotificationModel {
   bool? toAllRecipients;
   String status;
   DateTime createdAt;
-  DateTime? updatedAt;
+  DateTime updatedAt;
 
   NotificationModel({
     required this.id,
@@ -30,7 +30,7 @@ class NotificationModel {
     this.toAllRecipients,
     required this.status,
     required this.createdAt,
-    this.updatedAt,
+    required this.updatedAt,
   });
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
@@ -72,9 +72,9 @@ class NotificationModel {
       createdAt: //json["createdAt"] != null 
            parseDate(json["createdAt"].toString()),
           //: null,
-      updatedAt: json["updatedAt"] != null 
-          ? DateTime.parse(json["updatedAt"].toString())
-          : null,
+      updatedAt: //json["updatedAt"] != null 
+          parseDate(json["updatedAt"].toString())
+          //: null,
     );
   }
 
@@ -89,7 +89,7 @@ class NotificationModel {
       "toAllRecipients": toAllRecipients,
       "status": status,
       "createdAt": createdAt.toIso8601String(),
-      "updatedAt": updatedAt?.toIso8601String(),
+      "updatedAt": updatedAt.toIso8601String(),
     };
 
     if (recipients is String) {

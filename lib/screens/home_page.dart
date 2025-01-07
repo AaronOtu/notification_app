@@ -80,6 +80,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           time: _formatTime(notification.createdAt),
           id: notification.id,
           timeCreated: notification.createdAt,
+          timeResolved: notification.updatedAt
         ),
       ),
     );
@@ -273,6 +274,7 @@ String _formatTime(DateTime? dateTime) {
           body: notification.body,
           time: _formatTime(notification.createdAt),
           timeCreated: notification.createdAt,
+          //timeResolved: notification.updatedAt,
           onPressed: () => _navigateToNotificationDetails(notification),
         );
       },
@@ -284,11 +286,17 @@ String _formatTime(DateTime? dateTime) {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.notifications_off, size: 48, color: Colors.grey.shade400),
+          //Icon(Icons.notifications_off, size: 48, color: Colors.grey.shade400),
+           const Image(
+            image: AssetImage('assets/empty_notification.png'),
+            height: 64,
+            width: 64,
+          ),
           const SizedBox(height: 16),
-          Text(
-            'No ${status.toLowerCase()} notifications',
-            style: TextStyle(color: Colors.grey.shade600),
+          EtzText(
+            text:'No ${status.toLowerCase()} notifications',
+            color: Colors.grey.shade600,
+            //style: TextStyle(color: Colors.grey.shade600),
           ),
         ],
       ),
@@ -302,10 +310,13 @@ String _formatTime(DateTime? dateTime) {
         children: [
           Icon(Icons.error_outline, size: 48, color: Colors.red.shade400),
           const SizedBox(height: 16),
-          Text(
-            'Error loading notifications\n${error.toString()}',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.red),
+          Center(
+            child: EtzText(
+              text:'Error loading notifications\n${error.toString()}',
+              //textAlign: TextAlign.center,
+              color: Colors.red,
+              //style: const TextStyle(color: Colors.red),
+            ),
           ),
           const SizedBox(height: 16),
           ElevatedButton(

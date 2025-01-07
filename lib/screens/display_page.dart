@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -29,22 +28,26 @@ class AlertState {
   final bool isResolved;
   final String status;
   final bool isLoading;
+  final bool wasJustResolved;
 
   AlertState({
     required this.isResolved,
     required this.status,
     this.isLoading = false,
+    this.wasJustResolved = false,
   });
 
   AlertState copyWith({
     bool? isResolved,
     String? status,
     bool? isLoading,
+    bool? wasJustResolved,
   }) {
     return AlertState(
       isResolved: isResolved ?? this.isResolved,
       status: status ?? this.status,
       isLoading: isLoading ?? this.isLoading,
+      wasJustResolved: wasJustResolved ?? this.wasJustResolved,
     );
   }
 }
@@ -57,6 +60,7 @@ class AlertStatusNotifier extends StateNotifier<AlertState> {
     state = state.copyWith(
       isResolved: resolved,
       status: resolved ? 'RESOLVED' : 'PENDING',
+      wasJustResolved: resolved,
     );
   }
 
@@ -100,6 +104,7 @@ class DisplayPage extends ConsumerStatefulWidget {
   final String time;
   final String id;
   final DateTime timeCreated;
+  final DateTime timeResolved;
 
   const DisplayPage({
     super.key,
@@ -111,6 +116,7 @@ class DisplayPage extends ConsumerStatefulWidget {
     required this.time,
     required this.id,
     required this.timeCreated,
+    required this.timeResolved,
   });
 
   @override
@@ -118,6 +124,8 @@ class DisplayPage extends ConsumerStatefulWidget {
 }
 
 class _DisplayPageState extends ConsumerState<DisplayPage> {
+  bool _isNavigatingBack = false;
+
   @override
   void initState() {
     super.initState();
@@ -130,7 +138,25 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
     await ref.read(notificationDataProvider.notifier).fetchNotifications();
   }
 
-  // --------------------------- Resolve Alert Dialog ---------------------------
+  Future<bool> _handleBackPress() async {
+    final alertState = ref.read(alertStatusProvider);
+    
+    if (alertState.wasJustResolved) {
+      setState(() {
+        _isNavigatingBack = true;
+      });
+      
+      ref.read(alertStatusProvider.notifier).setLoading(true);
+      await _handleRefresh();
+      ref.read(alertStatusProvider.notifier).setLoading(false);
+    }
+
+    if (mounted) {
+      Navigator.of(context).pop(true);
+    }
+    return true;
+  }
+
   Future<void> _showResolveDialog() async {
     final alertNotifier = ref.read(alertStatusProvider.notifier);
 
@@ -165,7 +191,6 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
           await ref.read(notificationDataProvider.notifier).fetchNotifications();
           if (mounted) {
             _showSnackBar('Alert resolved successfully!');
-            Navigator.of(context).pop(true);
           }
         } else if (mounted) {
           throw Exception('Failed to resolve alert');
@@ -185,63 +210,91 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        backgroundColor: message.contains('successfully') 
+            ? Colors.green 
+            : Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        duration: const Duration(seconds: 3),
+      ),
     );
   }
 
-  // --------------------------- Build UI ---------------------------
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final alertState = ref.watch(alertStatusProvider);
 
-    return XcelLoader(
-      isLoading: alertState.isLoading,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const EtzText(
-            text: 'Notification Details',
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+    return WillPopScope(
+      onWillPop: _handleBackPress,
+      child: XcelLoader(
+        isLoading: alertState.isLoading && (alertState.wasJustResolved || _isNavigatingBack),
+        child: Scaffold(
+          backgroundColor: Colors.grey.shade200,
+          appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: _handleBackPress,
+            ),
+            title: const EtzText(
+              text: 'Notification Details',
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+            backgroundColor: Colors.white,
           ),
-          backgroundColor: Colors.white,
-        ),
-        body: LiquidPullToRefresh(
-          onRefresh: _handleRefresh,
-          showChildOpacityTransition: false,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Container(
-                width: screenWidth * 0.9,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.shade300,
-                      blurRadius: 5,
-                    ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeader(),
-                      const SizedBox(height: 20),
-                      _buildInfoRow('Severity', widget.severity),
-                      const SizedBox(height: 20),
-                      _buildDescriptionRow(),
-                      const SizedBox(height: 20),
-                      _buildInfoRowWithDate('Time', widget.timeCreated),
-                      const SizedBox(height: 20),
-                      _buildInfoRow('Status', alertState.status),
-                      const SizedBox(height: 20),
-                      if (alertState.status == 'PENDING') _buildResolveSwitch(),
+          body: LiquidPullToRefresh(
+            onRefresh: _handleRefresh,
+            showChildOpacityTransition: false,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Container(
+                  width: screenWidth * 0.9,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.shade300,
+                        blurRadius: 5,
+                      ),
                     ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(),
+                        const SizedBox(height: 20),
+                        _buildInfoRow('Severity', widget.severity),
+                        const SizedBox(height: 20),
+                        _buildDescriptionRow(),
+                        const SizedBox(height: 20),
+                        _buildInfoRowWithDate('Time', widget.timeCreated),
+                        const SizedBox(height: 20),
+                        if (alertState.status == 'RESOLVED')
+                          _buildInfoRowWithResolvedDate(
+                              'Resolved at', widget.timeCreated),
+                        const SizedBox(height: 20),
+                        _buildInfoRow('Status', alertState.status),
+                        const SizedBox(height: 20),
+                        if (alertState.status == 'PENDING') _buildResolveSwitch(),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -257,14 +310,37 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Center(
-          child: EtzText(
-            text: widget.appName,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
+          child: Row(
+            children: [
+              FittedBox(
+                child: SizedBox(
+                  height: 30,
+                  width: 30,
+                  child: Image(
+                    image: AssetImage('assets/app.png'),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              EtzText(
+                text: widget.appName,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 8),
-        EtzText(text: widget.title),
+        Row(
+          children: [
+            EtzText(
+              text: 'Title',
+              fontWeight: FontWeight.bold,
+            ),
+            const SizedBox(width: 20),
+            EtzText(text: widget.title),
+          ],
+        ),
       ],
     );
   }
@@ -308,10 +384,17 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
     return _buildInfoRow(label, formattedDate);
   }
 
+  Widget _buildInfoRowWithResolvedDate(String label, DateTime date) {
+    String formattedDate = DateFormat('dd MMM yyyy hh:mm a').format(date);
+    return _buildInfoRow(label, formattedDate);
+  }
+
   Widget _buildResolveSwitch() {
     final alertState = ref.watch(alertStatusProvider);
     return Row(
       children: [
+        const EtzText(text: 'Resolve',fontWeight: FontWeight.bold),
+        const SizedBox(width: 8),
         Switch(
           value: alertState.isResolved,
           onChanged: alertState.isLoading
@@ -324,8 +407,6 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
                   }
                 },
         ),
-        const SizedBox(width: 8),
-        const EtzText(text: 'Resolve'),
       ],
     );
   }

@@ -14,6 +14,7 @@ class NotificationWidget extends StatelessWidget {
   final String severity;
   final String time;
   final DateTime timeCreated;
+  //final DateTime timeResolved;
 
   final VoidCallback onPressed;
 
@@ -27,6 +28,7 @@ class NotificationWidget extends StatelessWidget {
     required this.time,
     required this.onPressed,
     required this.timeCreated,
+    //required this.timeResolved,
   });
 
   @override
@@ -118,7 +120,7 @@ class NotificationWidget extends StatelessWidget {
                               fontSize: 16,
                               maxLines: 1,
                               fontWeight: FontWeight.w600,
-                              overflow: TextOverflow.ellipsis),
+                              overflow: TextOverflow.fade),
                         ),
                         EtzText(
                           text: time,
