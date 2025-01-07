@@ -77,11 +77,14 @@ class NotificationWidget extends StatelessWidget {
                         Row(
                           children: [
                             FittedBox(
-                                child: SizedBox(
-                                    height: 30,
-                                    width: 30,
-                                    child: Image(
-                                        image: AssetImage('assets/app.png')))),
+                              child: SizedBox(
+                                height: 30,
+                                width: 30,
+                                child: Image(
+                                  image: AssetImage('assets/app.png'),
+                                ),
+                              ),
+                            ),
                             const SizedBox(width: 8),
                             EtzText(
                               text: appName,
@@ -113,6 +116,7 @@ class NotificationWidget extends StatelessWidget {
                           child: EtzText(
                               text: title,
                               fontSize: 16,
+                              maxLines: 1,
                               fontWeight: FontWeight.w600,
                               overflow: TextOverflow.ellipsis),
                         ),

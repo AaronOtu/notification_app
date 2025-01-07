@@ -15,12 +15,15 @@ class EmailPage extends ConsumerStatefulWidget {
 class _EmailPageState extends ConsumerState<EmailPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
-  bool _isLoading = false;
+  bool _isLoading = true; // Changed to true initially
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(emailsProvider.notifier).fetchEmails());
+    Future.microtask(() async {
+      await ref.read(emailsProvider.notifier).fetchEmails();
+      setState(() => _isLoading = false);
+    });
   }
 
   @override
@@ -45,7 +48,11 @@ class _EmailPageState extends ConsumerState<EmailPage> {
         ),
         title: const Row(
           children: [
-            Icon(Icons.email_outlined, color: Colors.blue),
+            Image(
+              image: AssetImage('assets/mail.png'),
+              height: 24,
+              width: 24,
+            ),
             SizedBox(width: 10),
             Text('Add New Email'),
           ],
@@ -55,7 +62,11 @@ class _EmailPageState extends ConsumerState<EmailPage> {
           decoration: InputDecoration(
             labelText: 'Email Address',
             hintText: 'Enter email address',
-            prefixIcon: const Icon(Icons.mail_outline),
+            // prefixIcon: const Image(
+            //   image: AssetImage('assets/mail.png'),
+            //   height: 20,
+            //   width: 20,
+            // ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
             ),
@@ -115,7 +126,11 @@ class _EmailPageState extends ConsumerState<EmailPage> {
         ),
         title: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.red),
+            const Image(
+              image: AssetImage('assets/high.png'),
+              height: 24,
+              width: 24,
+            ),
             const SizedBox(width: 10),
             Text('Delete Email', style: TextStyle(color: Colors.red[700])),
           ],
@@ -198,83 +213,70 @@ class _EmailPageState extends ConsumerState<EmailPage> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Search emails...',
-                          prefixIcon: const Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(20),
+                      child: SizedBox(
+                        height: 48, // Match button height
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            // focusedBorder: OutlineInputBorder(
+                            //   borderRadius: BorderRadius.circular(20),
+                            //   borderSide: BorderSide(
+                            //     color: Colors
+                            //         .blueAccent, // Blue border when selected
+                            //     width: 2.0,
+                            //   ),
+                            // ),
+                            hintText: 'Search emails...',
+                            prefixIcon: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: const Image(
+                                image: AssetImage('assets/search.png'),
+                                height: 10,
+                                width: 10,
+                              ),
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: BorderSide(
+                                color: Colors.grey.shade300,
+                                width:1.0
+                              )
+                            ),
                           ),
+                          onChanged: (value) => setState(() {}),
                         ),
-                        onChanged: (value) => setState(() {}),
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Stack(
-                      children: [
-                        // ElevatedButton.icon(
-                        //   onPressed: _showAddEmailDialog,
-
-                        //   icon: const Icon(Icons.email),
-
-                        //   label: const EtzText(text:'Add Email'),
-                        //   style: ElevatedButton.styleFrom(
-                        //     backgroundColor: Colors.blue,
-                        //     foregroundColor: Colors.white,
-
-                        //     padding: const EdgeInsets.symmetric(
-                        //       horizontal: 20,
-                        //       vertical: 12
-                        //     ),
-                        //   ),
-                        // )
-                       ElevatedButton(
-  onPressed: _showAddEmailDialog,
-  style: ElevatedButton.styleFrom(
-    backgroundColor: Colors.lightBlue,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
-    ),
-  ),
-  child: Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Image(image: AssetImage('assets/add_email.png'), height: 24, width: 24),
-      const SizedBox(width: 8),
-      EtzText(text: 'Add email',color: Colors.white,),
-      const SizedBox(width: 8),
-      Container(
-        height: 24, // Ensures the line is visible
-        width: 1, // Line thickness
-        color: Colors.grey, // Faint line color
-      ),
-      const SizedBox(width: 8),
-      EtzText(text: '${emails.length}'),
-    ],
-  ),
-)
-,
-                        if (emails.isNotEmpty)
-                          Positioned(
-                            right: 0,
-                            top: 0,
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: const BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Text(
-                                '${emails.length}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
+                    ElevatedButton(
+                      onPressed: _showAddEmailDialog,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.lightBlue,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Image(
+                            image: AssetImage('assets/add_email.png'),
+                            height: 24,
+                            width: 24,
                           ),
-                      ],
+                          const SizedBox(width: 8),
+                          EtzText(
+                            text: 'Add email (${emails.length})',
+                            color: Colors.black,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -296,10 +298,10 @@ class _EmailPageState extends ConsumerState<EmailPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.mail_outline,
-            size: 64,
-            color: Colors.grey[400],
+          const Image(
+            image: AssetImage('assets/empty_notification.png'),
+            height: 64,
+            width: 64,
           ),
           const SizedBox(height: 16),
           Text(
@@ -323,38 +325,40 @@ class _EmailPageState extends ConsumerState<EmailPage> {
       separatorBuilder: (context, index) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final email = emails[index];
-        return Card(
-          
-          elevation: 2,
-          shape: RoundedRectangleBorder(
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 8,
-            ),
-            leading: const CircleAvatar(
-              backgroundColor: Colors.blue,
-              child: Icon(
-                Icons.mail,
-                color: Colors.white,
+          child: Row(
+            children: [
+              const Image(
+                image: AssetImage('assets/email.png'),
+                height: 40,
+                width: 40,
               ),
-            ),
-            title: Text(
-              email.email ?? 'No email',
-              style: const TextStyle(
-                fontWeight: FontWeight.w500,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  email.email ?? 'No email',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete_outline),
-              color: Colors.red,
-              onPressed: () => _showDeleteEmailDialog(
-                email.id ?? '',
-                email.email ?? '',
+              IconButton(
+                icon: const Image(
+                  image: AssetImage('assets/delete.png'),
+                  height: 24,
+                  width: 24,
+                ),
+                onPressed: () => _showDeleteEmailDialog(
+                  email.id ?? '',
+                  email.email ?? '',
+                ),
               ),
-            ),
+            ],
           ),
         );
       },
