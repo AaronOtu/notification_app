@@ -83,6 +83,8 @@ flutter:
     - assets/mail.png
     - assets/telegram.png
     - assets/chat.png
+    - assets/subscribe.png
+    - assets/add_email.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

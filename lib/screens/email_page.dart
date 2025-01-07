@@ -1,8 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notification_app/api/notifiers/email_notifiers.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+import 'package:notification_app/widgets/custom_text.dart';
 import 'package:notification_app/widgets/loader.dart';
 
 class EmailPage extends ConsumerStatefulWidget {
@@ -78,7 +78,9 @@ class _EmailPageState extends ConsumerState<EmailPage> {
           ElevatedButton.icon(
             onPressed: () async {
               if (_emailController.text.isNotEmpty) {
-                await ref.read(emailsProvider.notifier).addEmail(_emailController.text);
+                await ref
+                    .read(emailsProvider.notifier)
+                    .addEmail(_emailController.text);
                 _emailController.clear();
                 await ref.read(emailsProvider.notifier).fetchEmails();
                 if (mounted) {
@@ -158,17 +160,22 @@ class _EmailPageState extends ConsumerState<EmailPage> {
   @override
   Widget build(BuildContext context) {
     final emails = ref.watch(emailsProvider);
-    final filteredEmails = emails.where((email) => 
-      email.email?.toLowerCase().contains(_searchController.text.toLowerCase()) ?? false
-    ).toList();
+    final filteredEmails = emails
+        .where((email) =>
+            email.email
+                ?.toLowerCase()
+                .contains(_searchController.text.toLowerCase()) ??
+            false)
+        .toList();
 
     return XcelLoader(
       isLoading: _isLoading,
       child: Scaffold(
-       backgroundColor:Colors.white,
+        backgroundColor: Colors.white,
         appBar: AppBar(
-          backgroundColor:Colors.white,
-          title: const Text('Email Management'),
+          backgroundColor: Colors.white,
+          title: const EtzText(
+              text: 'Email Management', fontWeight: FontWeight.bold),
           elevation: 2,
         ),
         body: LiquidPullToRefresh(
@@ -197,7 +204,7 @@ class _EmailPageState extends ConsumerState<EmailPage> {
                           hintText: 'Search emails...',
                           prefixIcon: const Icon(Icons.search),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(20),
                           ),
                         ),
                         onChanged: (value) => setState(() {}),
@@ -206,19 +213,48 @@ class _EmailPageState extends ConsumerState<EmailPage> {
                     const SizedBox(width: 16),
                     Stack(
                       children: [
-                        ElevatedButton.icon(
-                          onPressed: _showAddEmailDialog,
-                          icon: const Icon(Icons.email),
-                          label: const Text('New Email'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12
-                            ),
-                          ),
-                        ),
+                        // ElevatedButton.icon(
+                        //   onPressed: _showAddEmailDialog,
+
+                        //   icon: const Icon(Icons.email),
+
+                        //   label: const EtzText(text:'Add Email'),
+                        //   style: ElevatedButton.styleFrom(
+                        //     backgroundColor: Colors.blue,
+                        //     foregroundColor: Colors.white,
+
+                        //     padding: const EdgeInsets.symmetric(
+                        //       horizontal: 20,
+                        //       vertical: 12
+                        //     ),
+                        //   ),
+                        // )
+                       ElevatedButton(
+  onPressed: _showAddEmailDialog,
+  style: ElevatedButton.styleFrom(
+    backgroundColor: Colors.lightBlue,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
+  ),
+  child: Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Image(image: AssetImage('assets/add_email.png'), height: 24, width: 24),
+      const SizedBox(width: 8),
+      EtzText(text: 'Add email',color: Colors.white,),
+      const SizedBox(width: 8),
+      Container(
+        height: 24, // Ensures the line is visible
+        width: 1, // Line thickness
+        color: Colors.grey, // Faint line color
+      ),
+      const SizedBox(width: 8),
+      EtzText(text: '${emails.length}'),
+    ],
+  ),
+)
+,
                         if (emails.isNotEmpty)
                           Positioned(
                             right: 0,
@@ -267,7 +303,7 @@ class _EmailPageState extends ConsumerState<EmailPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            _searchController.text.isEmpty 
+            _searchController.text.isEmpty
                 ? 'No emails added yet'
                 : 'No matching emails found',
             style: TextStyle(
@@ -288,6 +324,7 @@ class _EmailPageState extends ConsumerState<EmailPage> {
       itemBuilder: (context, index) {
         final email = emails[index];
         return Card(
+          
           elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -324,4 +361,3 @@ class _EmailPageState extends ConsumerState<EmailPage> {
     );
   }
 }
-
