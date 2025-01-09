@@ -110,7 +110,7 @@ class _XcelLoaderState extends ConsumerState<XcelLoader>
                 child: RotationTransition(
                   turns: animation,
                   child: Image.asset(
-                    "assets/loading.png",
+                    "assets/etapp.png",
                     width: 90,
                     height: 90,
                   ),

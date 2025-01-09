@@ -43,6 +43,7 @@ class _SmsPageState extends ConsumerState<SmsPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15),
         ),
@@ -54,7 +55,7 @@ class _SmsPageState extends ConsumerState<SmsPage> {
               width: 24,
             ),
             SizedBox(width: 10),
-            Text('Add New SMS'),
+            EtzText(text:'SMS'),
           ],
         ),
         content: TextField(

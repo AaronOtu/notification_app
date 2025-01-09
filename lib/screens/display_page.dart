@@ -288,7 +288,7 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
                         const SizedBox(height: 20),
                         if (alertState.status == 'RESOLVED')
                           _buildInfoRowWithResolvedDate(
-                              'Resolved at', widget.timeCreated),
+                              'Resolved at', widget.timeResolved),
                         const SizedBox(height: 20),
                         _buildInfoRow('Status', alertState.status),
                         const SizedBox(height: 20),
@@ -317,7 +317,7 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
                   height: 30,
                   width: 30,
                   child: Image(
-                    image: AssetImage('assets/app.png'),
+                    image: AssetImage('assets/etapp.png'),
                   ),
                 ),
               ),

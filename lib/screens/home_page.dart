@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notification_app/api/api_service.dart';
 import 'package:notification_app/api/models/notification_model.dart';
+import 'package:notification_app/api/notifiers/alerts_notifiers.dart';
+import 'package:notification_app/helpers.dart';
 import 'package:notification_app/screens/display_page.dart';
 import 'package:notification_app/screens/email_page.dart';
+import 'package:notification_app/screens/errorlog_page.dart';
 import 'package:notification_app/screens/sms_page.dart';
 import 'package:notification_app/screens/telegram_page.dart';
 import 'package:notification_app/widgets/custom_container.dart';
@@ -16,8 +19,8 @@ import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 
 final apiProvider = Provider<ApiService>((ref) => ApiService());
 
-final notificationStateProvider = StateNotifierProvider<NotificationStateNotifier,
-    AsyncValue<List<NotificationModel>>>((ref) {
+final notificationStateProvider = StateNotifierProvider<
+    NotificationStateNotifier, AsyncValue<List<NotificationModel>>>((ref) {
   final apiService = ref.watch(apiProvider);
   return NotificationStateNotifier(apiService);
 });
@@ -54,12 +57,121 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
+  final List<String> severityOptions = ['Critical', 'High', 'Medium', 'Low'];
+  final List<String> channelOptions = ['Email', 'SMS', 'Telegram'];
+  final List<String> recipientOptions = ['Yes', 'No'];
+
+  // --------------------------- Refresh Methods ---------------------------
+
   Future<void> _handleRefresh() async {
-    return ref.read(notificationStateProvider.notifier).loadNotifications();
+    ref.invalidate(notificationSearchProvider);
+    await ref.read(notificationStateProvider.notifier).loadNotifications();
+  }
+
+  // --------------------------- Filter Methods ---------------------------
+
+  void _showFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            final filters = ref.watch(notificationFiltersProvider);
+            
+            return AlertDialog(
+              title: const Text('Filter Notifications'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildFilterDropdown(
+                      'Severity',
+                      severityOptions,
+                      filters.severity,
+                      (value) {
+                        ref.read(notificationFiltersProvider.notifier)
+                            .updateSeverity(value);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    _buildFilterDropdown(
+                      'Channel',
+                      channelOptions,
+                      filters.channel,
+                      (value) {
+                        ref.read(notificationFiltersProvider.notifier)
+                            .updateChannel(value);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    _buildFilterDropdown(
+                      'To All Recipients',
+                      recipientOptions,
+                      filters.toAllRecipient == null 
+                          ? null 
+                          : filters.toAllRecipient! ? 'Yes' : 'No',
+                      (value) {
+                        ref.read(notificationFiltersProvider.notifier)
+                            .updateToAllRecipient(value == 'Yes');
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    ref.read(notificationFiltersProvider.notifier).clearFilters();
+                    ref.invalidate(notificationSearchProvider);
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Clear Filters'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    ref.invalidate(notificationSearchProvider);
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Apply'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildFilterDropdown(
+    String label,
+    List<String> options,
+    String? currentValue,
+    Function(String?) onChanged,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        DropdownButton<String>(
+          value: currentValue,
+          hint: Text('Select $label'),
+          isExpanded: true,
+          items: options.map((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(value),
+            );
+          }).toList(),
+          onChanged: onChanged,
+        ),
+      ],
+    );
   }
 
   // --------------------------- Navigation Methods ---------------------------
-  
+
   void _navigateToScreen(Widget screen) {
     Navigator.push(
       context,
@@ -77,53 +189,26 @@ class _HomePageState extends ConsumerState<HomePage> {
           status: notification.status,
           title: notification.title,
           body: notification.body,
-          time: _formatTime(notification.createdAt),
+          time: formatTime(notification.createdAt),
           id: notification.id,
           timeCreated: notification.createdAt,
-          timeResolved: notification.updatedAt
+          timeResolved: notification.updatedAt,
         ),
       ),
     );
 
-    // Refresh the homepage if resolution was successful
     if (shouldRefresh == true && mounted) {
       await _handleRefresh();
     }
   }
 
-String _formatTime(DateTime? dateTime) {
-  if (dateTime == null) return 'N/A';
-
-  final now = DateTime.now();
-  final difference = now.difference(dateTime);
-
-  if (difference.inSeconds < 60) {
-    return difference.inSeconds == 1 ? '1 second ago' : '${difference.inSeconds} seconds ago';
-  } else if (difference.inMinutes < 60) {
-    return difference.inMinutes == 1 ? '1 minute ago' : '${difference.inMinutes} minutes ago';
-  } else if (difference.inHours < 24) {
-    return difference.inHours == 1 ? '1 hour ago' : '${difference.inHours} hours ago';
-  } else if (difference.inDays < 7) {
-    return difference.inDays == 1 ? '1 day ago' : '${difference.inDays} days ago';
-  } else if (difference.inDays < 30) {
-    final weeks = (difference.inDays / 7).floor();
-    return weeks == 1 ? '1 week ago' : '$weeks weeks ago';
-  } else if (difference.inDays < 365) {
-    final months = (difference.inDays / 30).floor();
-    return months == 1 ? '1 month ago' : '$months months ago';
-  } else {
-    final years = (difference.inDays / 365).floor();
-    return years == 1 ? '1 year ago' : '$years years ago';
-  }
-}
   // --------------------------- Build Methods ---------------------------
 
   @override
   Widget build(BuildContext context) {
     final notificationsState = ref.watch(notificationStateProvider);
-    
     return XcelLoader(
-      isLoading: notificationsState is AsyncLoading,
+        isLoading:notificationsState is AsyncLoading,
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: _buildAppBar(),
@@ -136,6 +221,7 @@ String _formatTime(DateTime? dateTime) {
               child: Column(
                 children: [
                   _buildTabBar(),
+                  _buildFilterRow(),
                   Expanded(
                     child: TabBarView(
                       children: <Widget>[
@@ -150,6 +236,45 @@ String _formatTime(DateTime? dateTime) {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildFilterRow() {
+    final filters = ref.watch(notificationFiltersProvider);
+    final activeFilters = [
+      filters.severity,
+      filters.channel,
+      filters.toAllRecipient,
+    ].where((filter) => filter != null).length;
+    
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          InkWell(
+            onTap: _showFilterDialog,
+            child: const FittedBox(
+              child: SizedBox(
+                height: 20,
+                width: 20,
+                child: Image(
+                  image: AssetImage('assets/dr_down.png'),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          const EtzText(text: 'Filtered by'),
+          const SizedBox(width: 8),
+          EtzText(
+            text: activeFilters > 0 ? '$activeFilters filters active' : 'None',
+            color: activeFilters > 0 
+                ? Colors.blue 
+                : const Color.fromARGB(255, 219, 215, 215),
+          ),
+        ],
       ),
     );
   }
@@ -169,14 +294,30 @@ String _formatTime(DateTime? dateTime) {
 
   Widget _buildDrawer() {
     final drawerItems = [
-      {'icon': const AssetImage('assets/mail.png'), 'title': 'Email', 'screen': const EmailPage()},
-      {'icon': const AssetImage('assets/chat.png'), 'title': 'SMS', 'screen': const SmsPage()},
-      {'icon': const AssetImage('assets/telegram.png'), 'title': 'Telegram', 'screen': const TelegramPage()},
+      {
+        'icon': const AssetImage('assets/mail.png'),
+        'title': 'Email',
+        'screen': const EmailPage()
+      },
+      {
+        'icon': const AssetImage('assets/chat.png'),
+        'title': 'SMS',
+        'screen': const SmsPage()
+      },
+      {
+        'icon': const AssetImage('assets/telegram.png'),
+        'title': 'Telegram',
+        'screen': const TelegramPage()
+      },
+      {
+        'icon': const AssetImage('assets/error.png'),
+        'title': 'Error Logs',
+        'screen': const ErrorlogPage()
+      },
     ];
 
     return Drawer(
       backgroundColor: Colors.white,
-
       child: ListView(
         children: [
           const DrawerHeader(
@@ -185,7 +326,7 @@ String _formatTime(DateTime? dateTime) {
             ),
             child: Center(
               child: Text(
-                ' Settings',
+                'Settings',
                 style: TextStyle(
                   color: Colors.black,
                   fontSize: 24,
@@ -194,8 +335,11 @@ String _formatTime(DateTime? dateTime) {
             ),
           ),
           ...drawerItems.map((item) => ListTile(
-                //leading: Icon(item['icon'] as IconData),
-                leading: Image(image: item['icon'] as AssetImage, width: 24, height:24,),
+                leading: Image(
+                  image: item['icon'] as AssetImage,
+                  width: 24,
+                  height: 24,
+                ),
                 title: Text(item['title'] as String),
                 onTap: () => _navigateToScreen(item['screen'] as Widget),
               )),
@@ -229,53 +373,43 @@ String _formatTime(DateTime? dateTime) {
     );
   }
 
-  Widget _buildNotificationList(String status) {
+  Widget _buildNotificationList(String tabStatus) {
     return Consumer(
       builder: (context, ref, child) {
-        final notificationsState = ref.watch(notificationStateProvider);
+        final searchResults = ref.watch(notificationSearchProvider);
 
-        return notificationsState.when(
-          data: (notifications) => _buildNotificationListContent(
-            notifications,
-            status,
-          ),
-          loading: () => const SizedBox(),
-          error: (error, stackTrace) => _buildErrorWidget(error),
-        );
-      },
-    );
-  }
+        return searchResults.when(
+          data: (notifications) {
+            final filteredByStatus = tabStatus == 'View All'
+                ? notifications
+                : notifications
+                    .where((n) => n.status.toUpperCase() == tabStatus.toUpperCase())
+                    .toList();
 
-  Widget _buildNotificationListContent(
-    List<NotificationModel> notifications,
-    String status,
-  ) {
-    final filteredNotifications = status == 'View All'
-        ? notifications
-        : notifications
-            .where((notification) =>
-                notification.status.toUpperCase() == status.toUpperCase())
-            .toList();
+            if (filteredByStatus.isEmpty) {
+              return _buildEmptyState(tabStatus);
+            }
 
-    if (filteredNotifications.isEmpty) {
-      return _buildEmptyState(status);
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(8.0),
-      itemCount: filteredNotifications.length,
-      itemBuilder: (context, index) {
-        final notification = filteredNotifications[index];
-        return NotificationWidget(
-          appName: notification.appName,
-          severity: notification.severity,
-          status: notification.status,
-          title: notification.title,
-          body: notification.body,
-          time: _formatTime(notification.createdAt),
-          timeCreated: notification.createdAt,
-          //timeResolved: notification.updatedAt,
-          onPressed: () => _navigateToNotificationDetails(notification),
+            return ListView.builder(
+              padding: const EdgeInsets.all(8.0),
+              itemCount: filteredByStatus.length,
+              itemBuilder: (context, index) {
+                final notification = filteredByStatus[index];
+                return NotificationWidget(
+                  appName: notification.appName,
+                  severity: notification.severity,
+                  status: notification.status,
+                  title: notification.title,
+                  body: notification.body,
+                  time: formatTime(notification.createdAt),
+                  timeCreated: notification.createdAt,
+                  onPressed: () => _navigateToNotificationDetails(notification),
+                );
+              },
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stack) => _buildErrorWidget(error),
         );
       },
     );
@@ -286,17 +420,15 @@ String _formatTime(DateTime? dateTime) {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          //Icon(Icons.notifications_off, size: 48, color: Colors.grey.shade400),
-           const Image(
+          const Image(
             image: AssetImage('assets/empty_notification.png'),
             height: 64,
             width: 64,
           ),
           const SizedBox(height: 16),
           EtzText(
-            text:'No ${status.toLowerCase()} notifications',
+            text: 'No ${status.toLowerCase()} notifications',
             color: Colors.grey.shade600,
-            //style: TextStyle(color: Colors.grey.shade600),
           ),
         ],
       ),
@@ -312,10 +444,8 @@ String _formatTime(DateTime? dateTime) {
           const SizedBox(height: 16),
           Center(
             child: EtzText(
-              text:'Error loading notifications\n${error.toString()}',
-              //textAlign: TextAlign.center,
+              text: 'Error loading notifications\n${error.toString()}',
               color: Colors.red,
-              //style: const TextStyle(color: Colors.red),
             ),
           ),
           const SizedBox(height: 16),

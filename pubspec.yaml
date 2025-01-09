@@ -93,6 +93,9 @@ flutter:
     - assets/add_sms.png
     - assets/add_telegram.png
     - assets/link.png
+    - assets/etapp.png
+    - assets/dr_down.png
+    - assets/error.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -83,7 +83,7 @@ class NotificationWidget extends StatelessWidget {
                                 height: 30,
                                 width: 30,
                                 child: Image(
-                                  image: AssetImage('assets/app.png'),
+                                  image: AssetImage('assets/etapp.png'),
                                 ),
                               ),
                             ),

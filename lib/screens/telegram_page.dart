@@ -43,6 +43,7 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15),
         ),
@@ -54,14 +55,14 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
               width: 24,
             ),
             SizedBox(width: 10),
-            Text('Add New Telegram Link'),
+            EtzText(text:'Telegram Link'),
           ],
         ),
         content: TextField(
           controller: _telegramController,
           decoration: InputDecoration(
             labelText: 'Telegram Link',
-            hintText: 'Enter Telegram Link',
+            hintText: 'Enter Link',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
             ),

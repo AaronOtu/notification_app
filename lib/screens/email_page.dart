@@ -43,6 +43,7 @@ class _EmailPageState extends ConsumerState<EmailPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15),
         ),
@@ -54,14 +55,14 @@ class _EmailPageState extends ConsumerState<EmailPage> {
               width: 24,
             ),
             SizedBox(width: 10),
-            Text('Add New Email'),
+            EtzText(text:'Email'),
           ],
         ),
         content: TextField(
           controller: _emailController,
           decoration: InputDecoration(
             labelText: 'Email Address',
-            hintText: 'Enter email address',
+            //hintText: 'Enter email address',
             // prefixIcon: const Image(
             //   image: AssetImage('assets/mail.png'),
             //   height: 20,
