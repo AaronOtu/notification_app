@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:buttons_tabbar/buttons_tabbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:notification_app/api/api_service.dart';
 import 'package:notification_app/api/models/notification_model.dart';
 import 'package:notification_app/api/notifiers/alerts_notifiers.dart';
@@ -14,8 +16,6 @@ import 'package:notification_app/screens/telegram_page.dart';
 import 'package:notification_app/widgets/custom_container.dart';
 import 'package:notification_app/widgets/custom_text.dart';
 import 'package:notification_app/widgets/loader.dart';
-import 'package:buttons_tabbar/buttons_tabbar.dart';
-import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 
 // --------------------------- Providers ---------------------------
 
@@ -32,6 +32,33 @@ final notificationStateProvider = StateNotifierProvider<
     NotificationStateNotifier, AsyncValue<List<NotificationModel>>>((ref) {
   final apiService = ref.watch(apiProvider);
   return NotificationStateNotifier(apiService);
+});
+
+final notificationSearchProvider =
+    FutureProvider.autoDispose<List<NotificationModel>>((ref) async {
+  final filters = ref.watch(notificationFiltersProvider);
+  final apiService = ref.watch(apiServiceProvider);
+
+  try {
+    final results = await apiService.fetchAlerts();
+
+    // Apply filters
+    var filtered = results;
+
+    if (filters.appName?.isNotEmpty ?? false) {
+      filtered = filtered
+          .where((notification) => notification.appName
+              .toLowerCase()
+              .contains(filters.appName!.toLowerCase()))
+          .toList();
+    }
+
+    // Apply other filters...
+
+    return filtered;
+  } catch (e) {
+    return [];
+  }
 });
 
 // --------------------------- State Management ---------------------------
@@ -122,8 +149,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   final TextEditingController appNameController = TextEditingController();
   Timer? _refreshTimer;
   // --------------------------- Refresh Methods ---------------------------
-  
-   @override
+
+  @override
   void initState() {
     super.initState();
     // // Set up timer for automatic refresh every 10 seconds
@@ -134,14 +161,13 @@ class _HomePageState extends ConsumerState<HomePage> {
     // });
   }
 
-
-
-   @override
+  @override
   void dispose() {
     appNameController.dispose();
     _refreshTimer?.cancel(); // Cancel the timer when the widget is disposed
     super.dispose();
   }
+
   Future<void> _handleRefresh() async {
     ref.invalidate(notificationSearchProvider);
     await ref.read(notificationStateProvider.notifier).loadNotifications();
@@ -224,7 +250,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   // --------------------------- Filter Methods ---------------------------
 
   void _showFilterDialog() {
-    appNameController.text = ref.read(notificationFiltersProvider).appName ?? '';
+    appNameController.text =
+        ref.read(notificationFiltersProvider).appName ?? '';
 
     showDialog(
       context: context,
@@ -240,20 +267,19 @@ class _HomePageState extends ConsumerState<HomePage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                         TextField(
-                    controller: appNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Search by App Name',
-                      hintText: 'Enter app name',
+                    TextField(
+                      controller: appNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Search by App Name',
+                        hintText: 'Enter app name',
+                      ),
+                      onChanged: (value) {
+                        ref
+                            .read(notificationFiltersProvider.notifier)
+                            .updateAppName(value.isEmpty ? null : value);
+                      },
                     ),
-                    onChanged: (value) {
-                      ref
-                          .read(notificationFiltersProvider.notifier)
-                          .updateAppName(value.isEmpty ? null : value);
-                    },
-                  ),
-                   const SizedBox(height:16),
-
+                    const SizedBox(height: 16),
                     _buildFilterDropdown(
                       'Severity',
                       severityOptions,
@@ -509,20 +535,22 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
           ),
           ...drawerItems.map(
-            (item) => ListTile(
-              leading: Image(
-                image: item['icon'] as AssetImage,
-                width: 24,
-                height: 24,
+            (item) => Padding(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 4.0, horizontal: 16),
+              child: ListTile(
+                leading: Image(
+                  image: item['icon'] as AssetImage,
+                  width: 24,
+                  height: 24,
+                ),
+                title: EtzText(text: item['title'] as String, fontSize: 16),
+                onTap: () => _navigateToScreen(item['screen'] as Widget),
               ),
-              title: EtzText(
-                text: item['title'] as String,
-              ),
-              onTap: () => _navigateToScreen(item['screen'] as Widget),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 16),
             child: _buildSchedulerSwitch(),
           )
         ],
@@ -602,62 +630,66 @@ class _HomePageState extends ConsumerState<HomePage> {
 //   );
 // }
 
-Widget _buildNotificationList(String tabStatus) {
-  return Consumer(
-    builder: (context, ref, child) {
-      final searchResults = ref.watch(notificationSearchProvider);
-      final filters = ref.watch(notificationFiltersProvider);
+  Widget _buildNotificationList(String tabStatus) {
+    return Consumer(
+      builder: (context, ref, child) {
+        final searchResults = ref.watch(notificationSearchProvider);
+        final filters = ref.watch(notificationFiltersProvider);
 
-      return searchResults.when(
-        data: (notifications) {
-          var filteredNotifications = List<NotificationModel>.from(notifications);
-          
-          // Apply app name filter
-          if (filters.appName != null && filters.appName!.isNotEmpty) {
-            filteredNotifications = filteredNotifications
-                .where((n) => n.appName.toLowerCase()
-                    .contains(filters.appName!.toLowerCase()))
-                .toList();
-          }
+        return searchResults.when(
+          data: (notifications) {
+            var filteredNotifications =
+                List<NotificationModel>.from(notifications);
 
-          // Sort by createdAt
-          filteredNotifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-          // Apply status filter
-          final filteredByStatus = tabStatus == 'View All'
-              ? filteredNotifications
-              : filteredNotifications
-                  .where((n) => n.status.toUpperCase() == tabStatus.toUpperCase())
+            // Apply app name filter
+            if (filters.appName != null && filters.appName!.isNotEmpty) {
+              filteredNotifications = filteredNotifications
+                  .where((n) => n.appName
+                      .toLowerCase()
+                      .contains(filters.appName!.toLowerCase()))
                   .toList();
+            }
 
-          if (filteredByStatus.isEmpty) {
-            return _buildEmptyState(tabStatus);
-          }
+            // Sort by createdAt
+            filteredNotifications
+                .sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(8.0),
-            itemCount: filteredByStatus.length,
-            itemBuilder: (context, index) {
-              final notification = filteredByStatus[index];
-              return NotificationWidget(
-                appName: notification.appName,
-                severity: notification.severity,
-                status: notification.status,
-                title: notification.title,
-                body: notification.body,
-                time: formatTime(notification.createdAt),
-                timeCreated: notification.createdAt,
-                onPressed: () => _navigateToNotificationDetails(notification),
-              );
-            },
-          );
-        },
-        loading: () => const SizedBox.shrink(),
-        error: (error, stack) => _buildErrorWidget(error),
-      );
-    },
-  );
-}
+            // Apply status filter
+            final filteredByStatus = tabStatus == 'View All'
+                ? filteredNotifications
+                : filteredNotifications
+                    .where((n) =>
+                        n.status.toUpperCase() == tabStatus.toUpperCase())
+                    .toList();
+
+            if (filteredByStatus.isEmpty) {
+              return _buildEmptyState(tabStatus);
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(8.0),
+              itemCount: filteredByStatus.length,
+              itemBuilder: (context, index) {
+                final notification = filteredByStatus[index];
+                return NotificationWidget(
+                  appName: notification.appName,
+                  severity: notification.severity,
+                  status: notification.status,
+                  title: notification.title,
+                  body: notification.body,
+                  time: formatTime(notification.createdAt),
+                  timeCreated: notification.createdAt,
+                  onPressed: () => _navigateToNotificationDetails(notification),
+                );
+              },
+            );
+          },
+          loading: () => const SizedBox.shrink(),
+          error: (error, stack) => _buildErrorWidget(error),
+        );
+      },
+    );
+  }
 
   Widget _buildEmptyState(String status) {
     return Center(
@@ -701,67 +733,130 @@ Widget _buildNotificationList(String tabStatus) {
       ),
     );
   }
+  // Future<void> _showSystemErrorDialog() async {
+  //   await showDialog(
+  //     context: context,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(15),
+  //         ),
+  //         title: Column(
+  //           children: [
+  //             const Icon(
+  //               Icons.error_outline,
+  //               color: Colors.red,
+  //               size: 48,
+  //             ),
+  //             const SizedBox(height: 12),
+  //             const Text(
+  //               'System Error',
+  //               style: TextStyle(
+  //                 fontSize: 20,
+  //                 fontWeight: FontWeight.bold,
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //         content: const Text(
+  //           'Please try again later.',
+  //           textAlign: TextAlign.center,
+  //         ),
+  //         actions: [
+  //           Center(
+  //             child: TextButton(
+  //               style: TextButton.styleFrom(
+  //                 backgroundColor: Colors.blue,
+  //                 padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+  //                 shape: RoundedRectangleBorder(
+  //                   borderRadius: BorderRadius.circular(20),
+  //                 ),
+  //               ),
+  //               onPressed: () => Navigator.of(context).pop(),
+  //               child: const Text(
+  //                 'OK',
+  //                 style: TextStyle(color: Colors.white),
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   Widget _buildSchedulerSwitch() {
-  final schedulerState = ref.watch(schedulerStatusProvider);
-  
-  Future<void> showTurnOffDialog() async {
-    bool? result = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Turn Off Scheduler'),
-          content: const Text('Are you sure you want to turn off the scheduler?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Turn Off'),
-            ),
-          ],
-        );
-      },
+    final schedulerState = ref.watch(schedulerStatusProvider);
+    return ListTile(
+      leading: const Image(
+        image: AssetImage('assets/schedule.png'),
+        width: 24,
+        height: 24,
+      ),
+      title: const EtzText(
+        text: 'Scheduler',
+        fontSize: 16,
+      ),
+      trailing: Transform.scale(
+        scale: 0.8,
+        child: Switch(
+          activeColor: Colors.white,
+          activeTrackColor: Colors.blue,
+          inactiveTrackColor: Colors.grey.shade200,
+          value: schedulerState.isActive,
+          onChanged: schedulerState.isLoading
+              ? null
+              : (bool value) async {
+                  // Show confirmation dialog based on the intended state
+                  final shouldChange =
+                      await _showSchedulerConfirmationDialog(value);
+                  if (shouldChange && mounted) {
+                    try {
+                      await ref
+                          .read(schedulerStatusProvider.notifier)
+                          .toggleScheduler();
+                      if (mounted) {
+                        _showSnackBar(
+                          'Scheduler ${value ? 'activated' : 'deactivated'} successfully!',
+                        );
+                      }
+                    } catch (error) {
+                      if (mounted) {
+                        _showSnackBar(
+                            'Failed to toggle scheduler: ${error.toString()}');
+                      }
+                    }
+                  }
+                },
+        ),
+      ),
     );
-
-    if (result == true && mounted) {
-      try {
-        await ref.read(schedulerStatusProvider.notifier).toggleScheduler();
-        if (mounted) {
-          _showSnackBar('Scheduler deactivated successfully!');
-        }
-      } catch (error) {
-        if (mounted) {
-          _showSnackBar('Failed to toggle scheduler: ${error.toString()}');
-        }
-      }
-    }
   }
 
-  return Row(
-    children: [
-      Switch(
-        value: schedulerState.isActive,
-        onChanged: schedulerState.isLoading
-            ? null
-            : (bool value) async {
-                if (value) {
-                  // Show reset dialog when turning ON
-                  showResolveDialog();
-                } else {
-                  // Show turn off dialog when turning OFF
-                  showTurnOffDialog();
-                }
-              },
-      ),
-      const SizedBox(width: 8),
-      const EtzText(
-        text: 'Scheduler',
-        fontSize: 24,
-      ),
-    ],
-  );
-}
+  Future<bool> _showSchedulerConfirmationDialog(bool newState) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              title:
+                  EtzText(text: '${newState ? 'Disable' : 'Enable'} Scheduler'),
+              content: EtzText(
+                  text:
+                      'Are you sure you want to ${newState ? 'disable' : 'enable'} the scheduler?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const EtzText(text: 'Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: EtzText(text: newState ? 'Disable' : 'Enable'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+  }
 }

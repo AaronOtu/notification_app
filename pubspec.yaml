@@ -45,6 +45,7 @@ dependencies:
   intl: ^0.18.1
   logger: ^2.2.0
   pretty_logger: ^1.0.0
+  timeago: ^3.7.0
   #modal_progress_hud_nsn: ^0.2.0
 
 dev_dependencies:
@@ -96,6 +97,7 @@ flutter:
     - assets/etapp.png
     - assets/dr_down.png
     - assets/error.png
+    - assets/schedule.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

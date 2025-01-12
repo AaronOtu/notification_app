@@ -1,6 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:notification_app/api/models/notification_model.dart';
 import 'package:notification_app/api/api_service.dart';
+import 'package:notification_app/api/models/notification_model.dart';
 
 class NotificationFilters {
   final String? appName;
@@ -72,16 +74,35 @@ class NotificationFiltersNotifier extends StateNotifier<NotificationFilters> {
 
 final apiServiceProvider = Provider<ApiService>((ref) => ApiService());
 
+// Add timer for debouncing
+Timer? _debounceTimer;
+
 final notificationSearchProvider =
     FutureProvider.autoDispose<List<NotificationModel>>((ref) async {
   final filters = ref.watch(notificationFiltersProvider);
   final apiService = ref.watch(apiServiceProvider);
 
-  return apiService.searchNotification(
-    appName: filters.appName,
-    severity: filters.severity,
-    channel: filters.channel,
-    createdAt: filters.createdAt,
-    toAllRecipient: filters.toAllRecipient,
-  );
+  // Cancel previous debounce timer
+  _debounceTimer?.cancel();
+
+  // Create new timer
+  return Future.delayed(const Duration(milliseconds: 300), () async {
+    try {
+      final results = await apiService.searchNotification(
+        appName: filters.appName?.trim(), // Trim whitespace
+        severity: filters.severity,
+        channel: filters.channel,
+        createdAt: filters.createdAt,
+        toAllRecipient: filters.toAllRecipient,
+      );
+
+      // Sort results if needed
+      results.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      return results;
+    } catch (e) {
+      // Handle errors gracefully
+      return [];
+    }
+  });
 });

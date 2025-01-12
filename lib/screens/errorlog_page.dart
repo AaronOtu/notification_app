@@ -4,7 +4,7 @@ import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:notification_app/api/api_service.dart';
 import 'package:notification_app/api/models/error_response_model.dart';
 import 'package:notification_app/helpers.dart';
-import 'package:notification_app/screens/display_page.dart';
+import 'package:notification_app/screens/errordisplay_page.dart';
 import 'package:notification_app/widgets/custom_container.dart';
 import 'package:notification_app/widgets/custom_text.dart';
 import 'package:notification_app/widgets/loader.dart';
@@ -58,7 +58,7 @@ void _navigateToNotificationDetails(ErrorModel notification) async {
     final shouldRefresh = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (context) => DisplayPage(
+        builder: (context) => ErrorDisplayPage(
           appName: notification.appName,
           severity: notification.severity,
           status: notification.status,
@@ -116,10 +116,7 @@ void _navigateToNotificationDetails(ErrorModel notification) async {
                 },
               ),
               error: (error, stackTrace) => Text(error.toString()),
-              loading: () => const Center(
-                  child:
-                      CircularProgressIndicator(backgroundColor: Colors.blue)),
-          )
+              loading: () => const SizedBox.shrink())
       
          )
       
