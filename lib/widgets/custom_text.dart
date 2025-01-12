@@ -6,9 +6,9 @@ class EtzText extends StatelessWidget {
   final double? fontSize;
   final FontWeight? fontWeight;
   final Color? color;
-  final TextOverflow? overflow; // Added overflow property
-  final bool? softWrap; // Added softWrap property
-  final int? maxLines; // Added maxLines property
+  final TextOverflow? overflow;
+  final bool? softWrap; 
+  final int? maxLines;
 
   const EtzText({
     super.key,
@@ -16,9 +16,9 @@ class EtzText extends StatelessWidget {
     this.fontSize,
     this.fontWeight,
     this.color,
-    this.overflow = TextOverflow.clip, // Default overflow behavior
-    this.softWrap = true, // Default softWrap behavior
-    this.maxLines, // Optional max lines
+    this.overflow = TextOverflow.clip, 
+    this.softWrap = true, 
+    this.maxLines, 
   });
 
   @override
@@ -32,9 +32,9 @@ class EtzText extends StatelessWidget {
           color: color ?? Colors.black,
         ),
       ),
-      overflow: overflow, // Apply overflow behavior
-      softWrap: softWrap, // Enable/disable softWrap
-      maxLines: maxLines, // Limit lines if set
+      overflow: overflow, 
+      softWrap: softWrap, 
+      maxLines: maxLines, 
     );
   }
 }

@@ -326,6 +326,8 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
                 text: widget.appName,
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
+                maxLines:2,
+                overflow:TextOverflow.ellipsis
               ),
             ],
           ),
