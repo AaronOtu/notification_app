@@ -164,16 +164,17 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Resolve Alert'),
-          content: const Text('Are you sure you want to resolve this alert?'),
+          backgroundColor: Colors.white,
+          title: const EtzText(text:'Resolve Alert'),
+          content: const EtzText(text: 'Are you sure you want to resolve this alert?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
+              child: const EtzText(text: 'Cancel'),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Resolve'),
+              child: const EtzText(text: 'Resolve'),
             ),
           ],
         );

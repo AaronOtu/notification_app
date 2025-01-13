@@ -846,10 +846,10 @@ class _HomePageState extends ConsumerState<HomePage> {
             return AlertDialog(
               backgroundColor: Colors.white,
               title:
-                  EtzText(text: '${newState ? 'Disable' : 'Enable'} Scheduler'),
+                  EtzText(text: '${newState ? 'Enable' : 'Disable'} Scheduler'),
               content: EtzText(
                   text:
-                      'Are you sure you want to ${newState ? 'disable' : 'enable'} the scheduler?'),
+                      'Are you sure you want to ${newState ? 'enable' : 'disable'} the scheduler?'),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
@@ -857,7 +857,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(true),
-                  child: EtzText(text: newState ? 'Disable' : 'Enable'),
+                  child: EtzText(text: newState ? 'Enable' : 'Disable'),
                 ),
               ],
             );
