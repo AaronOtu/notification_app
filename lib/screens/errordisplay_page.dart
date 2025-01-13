@@ -138,6 +138,7 @@ class _DisplayPageState extends ConsumerState<ErrorDisplayPage> {
     await ref.read(notificationDataProvider.notifier).fetchNotifications();
   }
 
+  // ignore: unused_element
   Future<bool> _handleBackPress() async {
     final alertState = ref.read(alertStatusProvider);
     
@@ -237,7 +238,11 @@ class _DisplayPageState extends ConsumerState<ErrorDisplayPage> {
     final alertState = ref.watch(alertStatusProvider);
 
     return WillPopScope(
-      onWillPop: _handleBackPress,
+      onWillPop:() async {
+        Navigator.of(context).pop(false); // Pop with false to avoid refresh
+        return false;
+      },
+      //_handleBackPress,
       child: XcelLoader(
         isLoading: alertState.isLoading && (alertState.wasJustResolved || _isNavigatingBack),
         child: Scaffold(
@@ -245,7 +250,8 @@ class _DisplayPageState extends ConsumerState<ErrorDisplayPage> {
           appBar: AppBar(
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
-              onPressed: _handleBackPress,
+              onPressed: () => Navigator.of(context).pop(false),
+              // _handleBackPress,
             ),
             title: const EtzText(
               text: 'Notification Details',

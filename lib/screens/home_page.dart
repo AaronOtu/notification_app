@@ -17,6 +17,7 @@ import 'package:notification_app/widgets/custom_container.dart';
 import 'package:notification_app/widgets/custom_text.dart';
 import 'package:notification_app/widgets/loader.dart';
 
+
 // --------------------------- Providers ---------------------------
 
 final apiProvider = Provider<ApiService>((ref) => ApiService());
@@ -153,12 +154,12 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-    // // Set up timer for automatic refresh every 10 seconds
-    // _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-    //   if (mounted) {
-    //     _handleRefresh();
-    //   }
-    // });
+    // Set up timer for automatic refresh every 10 seconds
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) {
+        _handleRefresh();
+      }
+    });
   }
 
   @override
@@ -261,7 +262,9 @@ class _HomePageState extends ConsumerState<HomePage> {
             final filters = ref.watch(notificationFiltersProvider);
 
             return AlertDialog(
-              title: const Text('Filter Notifications'),
+              backgroundColor: Colors.white,
+              title: const EtzText(text: 'Filter Notifications'),
+
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -271,7 +274,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       controller: appNameController,
                       decoration: const InputDecoration(
                         labelText: 'Search by App Name',
-                        hintText: 'Enter app name',
+                        //hintText: 'Enter app name',
                       ),
                       onChanged: (value) {
                         ref
@@ -328,14 +331,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ref.invalidate(notificationSearchProvider);
                     Navigator.of(context).pop();
                   },
-                  child: const Text('Clear Filters'),
+                  child: const EtzText(text: 'Clear Filters'),
                 ),
                 TextButton(
                   onPressed: () {
                     ref.invalidate(notificationSearchProvider);
                     Navigator.of(context).pop();
                   },
-                  child: const Text('Apply'),
+                  child: const EtzText(text: 'Apply'),
                 ),
               ],
             );
@@ -354,16 +357,18 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        EtzText(text: label, fontWeight: FontWeight.bold),
+        //Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         DropdownButton<String>(
+           dropdownColor: Colors.white,
           value: currentValue,
-          hint: Text('Select $label'),
+          hint: EtzText(text: 'Select $label'),
           isExpanded: true,
           items: options.map((String value) {
             return DropdownMenuItem<String>(
               value: value,
-              child: Text(value),
+              child: EtzText(text: value),
             );
           }).toList(),
           onChanged: onChanged,
@@ -448,6 +453,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       filters.severity,
       filters.channel,
       filters.toAllRecipient,
+       filters.appName?.isNotEmpty == true ? filters.appName : null,
     ].where((filter) => filter != null).length;
 
     return Padding(
@@ -468,7 +474,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
           ),
           const SizedBox(width: 8),
-          const EtzText(text: 'Filtered by'),
+          const EtzText(text: 'Filters'),
           const SizedBox(width: 8),
           EtzText(
             text: activeFilters > 0 ? '$activeFilters filters active' : 'None',

@@ -1,5 +1,4 @@
-// notification_widget.dart
-// ignore_for_file: unused_local_variable, deprecated_member_use
+// ignore_for_file: unused_local_variable
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -14,8 +13,6 @@ class NotificationWidget extends StatelessWidget {
   final String severity;
   final String time;
   final DateTime timeCreated;
-  //final DateTime timeResolved;
-
   final VoidCallback onPressed;
 
   const NotificationWidget({
@@ -28,7 +25,6 @@ class NotificationWidget extends StatelessWidget {
     required this.time,
     required this.onPressed,
     required this.timeCreated,
-    //required this.timeResolved,
   });
 
   @override
@@ -47,7 +43,6 @@ class NotificationWidget extends StatelessWidget {
             onTap: onPressed,
             child: Container(
               height: screenHeight * 0.19,
-              //width: screenWidth * 1.0,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: colors,
@@ -76,31 +71,46 @@ class NotificationWidget extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+                        // Wrap the app name section in Expanded
+                        Expanded(
+                          child: Row(
+                            children: [
+                              const FittedBox(
+                                child: SizedBox(
+                                  height: 30,
+                                  width: 30,
+                                  child: Image(
+                                    image: AssetImage('assets/etapp.png'),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: EtzText(
+                                  text: appName,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(width: 8),
+
                         Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             FittedBox(
                               child: SizedBox(
-                                height: 30,
-                                width: 30,
-                                child: Image(
-                                  image: AssetImage('assets/etapp.png'),
-                                ),
+                                height: 20,
+                                width: 20,
+                                child: imageIcon,
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            EtzText(
-                              text: appName,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            FittedBox(
-                                child: SizedBox(
-                                    height: 20, width: 20, child: imageIcon)),
                             const SizedBox(width: 8),
                             EtzText(
                               text: severity,
@@ -116,11 +126,12 @@ class NotificationWidget extends StatelessWidget {
                       children: [
                         Expanded(
                           child: EtzText(
-                              text: title,
-                              fontSize: 16,
-                              maxLines: 1,
-                              fontWeight: FontWeight.w600,
-                              overflow: TextOverflow.fade),
+                            text: title,
+                            fontSize: 16,
+                            maxLines: 1,
+                            fontWeight: FontWeight.w600,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                         EtzText(
                           text: time,
@@ -145,9 +156,15 @@ class NotificationWidget extends StatelessWidget {
             bottom: 10,
             right: 10,
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 FittedBox(
-                    child: SizedBox(height: 20, width: 20, child: statusIcons)),
+                  child: SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: statusIcons,
+                  ),
+                ),
                 const SizedBox(width: 8),
                 EtzText(text: status),
               ],
@@ -157,10 +174,11 @@ class NotificationWidget extends StatelessWidget {
             bottom: 10,
             left: 10,
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 EtzText(
-                    text:
-                        DateFormat('dd MMM yyyy hh:mm a').format(timeCreated)),
+                  text: DateFormat('dd MMM yyyy hh:mm a').format(timeCreated),
+                ),
               ],
             ),
           ),
