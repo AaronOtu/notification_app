@@ -17,7 +17,6 @@ import 'package:notification_app/widgets/custom_container.dart';
 import 'package:notification_app/widgets/custom_text.dart';
 import 'package:notification_app/widgets/loader.dart';
 
-
 // --------------------------- Providers ---------------------------
 
 final apiProvider = Provider<ApiService>((ref) => ApiService());
@@ -54,8 +53,6 @@ final notificationSearchProvider =
           .toList();
     }
 
-    // Apply other filters...
-
     return filtered;
   } catch (e) {
     return [];
@@ -66,8 +63,8 @@ final notificationSearchProvider =
 
 class SchedulerState {
   final bool
-      isActive; // Represents the toggle state (true for ON, false for OFF)
-  final bool isLoading; // Represents the loading state
+      isActive;
+  final bool isLoading; 
 
   SchedulerState({
     required this.isActive,
@@ -154,7 +151,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-    // Set up timer for automatic refresh every 10 seconds
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) {
         _handleRefresh();
@@ -264,7 +260,6 @@ class _HomePageState extends ConsumerState<HomePage> {
             return AlertDialog(
               backgroundColor: Colors.white,
               title: const EtzText(text: 'Filter Notifications'),
-
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -361,7 +356,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         //Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         DropdownButton<String>(
-           dropdownColor: Colors.white,
+          dropdownColor: Colors.white,
           value: currentValue,
           hint: EtzText(text: 'Select $label'),
           isExpanded: true,
@@ -453,7 +448,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       filters.severity,
       filters.channel,
       filters.toAllRecipient,
-       filters.appName?.isNotEmpty == true ? filters.appName : null,
+      filters.appName?.isNotEmpty == true ? filters.appName : null,
     ].where((filter) => filter != null).length;
 
     return Padding(
@@ -589,53 +584,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-//   Widget _buildNotificationList(String tabStatus) {
-//   return Consumer(
-//     builder: (context, ref, child) {
-//       final searchResults = ref.watch(notificationSearchProvider);
-//       final filters = ref.watch(notificationFiltersProvider);
-
-//       return searchResults.when(
-//         data: (notifications) {
-//           // Sort notifications by createdAt timestamp in descending order (newest first)
-//           final sortedNotifications = List<NotificationModel>.from(notifications)
-//             ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-//           final filteredByStatus = tabStatus == 'View All'
-//               ? sortedNotifications
-//               : sortedNotifications
-//                   .where((n) => n.status.toUpperCase() == tabStatus.toUpperCase())
-//                   .toList();
-
-//           if (filteredByStatus.isEmpty) {
-//             return _buildEmptyState(tabStatus);
-//           }
-
-//           return ListView.builder(
-//             padding: const EdgeInsets.all(8.0),
-//             itemCount: filteredByStatus.length,
-//             itemBuilder: (context, index) {
-//               final notification = filteredByStatus[index];
-//               return NotificationWidget(
-//                 appName: notification.appName,
-//                 severity: notification.severity,
-//                 status: notification.status,
-//                 title: notification.title,
-//                 body: notification.body,
-//                 time: formatTime(notification.createdAt),
-//                 timeCreated: notification.createdAt,
-//                 onPressed: () => _navigateToNotificationDetails(notification),
-//               );
-//             },
-//           );
-//         },
-//         loading: () => const SizedBox.shrink(),
-//         error: (error, stack) => _buildErrorWidget(error),
-//       );
-//     },
-//   );
-// }
-
   Widget _buildNotificationList(String tabStatus) {
     return Consumer(
       builder: (context, ref, child) {
@@ -656,11 +604,36 @@ class _HomePageState extends ConsumerState<HomePage> {
                   .toList();
             }
 
+            // Severity filter
+            if (filters.severity != null) {
+              filteredNotifications = filteredNotifications
+                  .where((n) =>
+                      n.severity.toLowerCase() ==
+                      filters.severity!.toLowerCase())
+                  .toList();
+            }
+
+            // Channel filter
+            if (filters.channel != null) {
+              filteredNotifications = filteredNotifications
+                  .where((n) =>
+                      n.channel?.toLowerCase() ==
+                      filters.channel!.toLowerCase())
+                  .toList();
+            }
+
+            // ToAllRecipient filter
+            if (filters.toAllRecipient != null) {
+              filteredNotifications = filteredNotifications
+                  .where((n) => n.toAllRecipients == filters.toAllRecipient)
+                  .toList();
+            }
+
             // Sort by createdAt
             filteredNotifications
                 .sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-            // Apply status filter
+            // status filter
             final filteredByStatus = tabStatus == 'View All'
                 ? filteredNotifications
                 : filteredNotifications
@@ -669,7 +642,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     .toList();
 
             if (filteredByStatus.isEmpty) {
-              return _buildEmptyState(tabStatus);
+              return buildEmptyState(tabStatus);
             }
 
             return ListView.builder(
@@ -697,7 +670,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  Widget _buildEmptyState(String status) {
+  Widget buildEmptyState(String status) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

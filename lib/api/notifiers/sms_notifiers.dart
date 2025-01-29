@@ -9,12 +9,16 @@ class SmsNotifier extends StateNotifier<List<ResponseSms>> {
   final ApiService _apiService = ApiService();
 
   Future<void> fetchSms() async {
-    try {
-      final List<ResponseSms> sms = await _apiService.fetchSms();
-      state = sms;
-    } catch (e) {
-      debugPrint('Error fetching sms: $e');
+
+    if (state.isEmpty){
+      try {
+        final List<ResponseSms> sms = await _apiService.fetchSms();
+        state = sms;
+      } catch (e) {
+        debugPrint('Error fetching sms: $e');
+      }
     }
+  
   }
 
   Future<void> addSms(String sms) async {

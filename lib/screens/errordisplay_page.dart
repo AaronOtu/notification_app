@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -141,12 +143,12 @@ class _DisplayPageState extends ConsumerState<ErrorDisplayPage> {
   // ignore: unused_element
   Future<bool> _handleBackPress() async {
     final alertState = ref.read(alertStatusProvider);
-    
+
     if (alertState.wasJustResolved) {
       setState(() {
         _isNavigatingBack = true;
       });
-      
+
       ref.read(alertStatusProvider.notifier).setLoading(true);
       await _handleRefresh();
       ref.read(alertStatusProvider.notifier).setLoading(false);
@@ -219,8 +221,8 @@ class _DisplayPageState extends ConsumerState<ErrorDisplayPage> {
   //           fontWeight: FontWeight.w500,
   //         ),
   //       ),
-  //       backgroundColor: message.contains('successfully') 
-  //           ? Colors.green 
+  //       backgroundColor: message.contains('successfully')
+  //           ? Colors.green
   //           : Colors.red,
   //       behavior: SnackBarBehavior.floating,
   //       margin: const EdgeInsets.all(16),
@@ -238,13 +240,14 @@ class _DisplayPageState extends ConsumerState<ErrorDisplayPage> {
     final alertState = ref.watch(alertStatusProvider);
 
     return WillPopScope(
-      onWillPop:() async {
-        Navigator.of(context).pop(false); // Pop with false to avoid refresh
+      onWillPop: () async {
+        Navigator.of(context).pop(false);
         return false;
       },
       //_handleBackPress,
       child: XcelLoader(
-        isLoading: alertState.isLoading && (alertState.wasJustResolved || _isNavigatingBack),
+        isLoading: alertState.isLoading &&
+            (alertState.wasJustResolved || _isNavigatingBack),
         child: Scaffold(
           backgroundColor: Colors.grey.shade200,
           appBar: AppBar(
@@ -254,7 +257,7 @@ class _DisplayPageState extends ConsumerState<ErrorDisplayPage> {
               // _handleBackPress,
             ),
             title: const EtzText(
-              text: 'Notification Details',
+              text: 'Error Details',
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -294,11 +297,10 @@ class _DisplayPageState extends ConsumerState<ErrorDisplayPage> {
                         // if (alertState.status == 'RESOLVED')
                         //   _buildInfoRowWithResolvedDate(
                         //       'Resolved at', widget.timeResolved),
-                        const SizedBox(height: 20),
-                        _buildInfoRow('Status', alertState.status),
+                        //const SizedBox(height: 20),
+                        // _buildInfoRow('Status', alertState.status),
                         const SizedBox(height: 20),
                         _buildDescriptionRow(),
-                
                       ],
                     ),
                   ),
@@ -317,6 +319,7 @@ class _DisplayPageState extends ConsumerState<ErrorDisplayPage> {
       children: [
         Center(
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               FittedBox(
                 child: SizedBox(
@@ -328,25 +331,33 @@ class _DisplayPageState extends ConsumerState<ErrorDisplayPage> {
                 ),
               ),
               const SizedBox(width: 8),
-              EtzText(
-                text: widget.appName,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                maxLines:2,
-                overflow:TextOverflow.ellipsis
+              Expanded(
+                child: EtzText(
+                    text: widget.appName,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis),
               ),
             ],
           ),
         ),
         const SizedBox(height: 8),
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             EtzText(
               text: 'Title',
               fontWeight: FontWeight.bold,
             ),
             const SizedBox(width: 20),
-            EtzText(text: widget.title),
+            Expanded(
+              child: EtzText(
+                  text: widget.title,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                  softWrap: true),
+            )
           ],
         ),
       ],
@@ -367,18 +378,16 @@ class _DisplayPageState extends ConsumerState<ErrorDisplayPage> {
   }
 
   Widget _buildDescriptionRow() {
-    return Column(
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Center(
-          child: EtzText(
-            text: 'Description',
-            fontWeight: FontWeight.bold,
-          ),
+        EtzText(
+          text: 'Description',
+          fontWeight: FontWeight.bold,
         ),
-        const SizedBox(height: 16),
+        const SizedBox(width: 16),
         Container(
-          constraints: const BoxConstraints(maxHeight: 200), // Set max height
+          constraints: const BoxConstraints(maxHeight: 200),
           child: SingleChildScrollView(
             child: EtzText(
               text: widget.body,

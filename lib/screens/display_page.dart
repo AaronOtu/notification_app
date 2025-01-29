@@ -1,10 +1,12 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:notification_app/api/api_service.dart';
 import 'package:notification_app/api/models/notification_model.dart';
 import 'package:notification_app/widgets/custom_text.dart';
-import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+//import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:notification_app/widgets/loader.dart';
 
 // --------------------------- Providers ---------------------------
@@ -255,47 +257,43 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
             ),
             backgroundColor: Colors.white,
           ),
-          body: LiquidPullToRefresh(
-            onRefresh: _handleRefresh,
-            showChildOpacityTransition: false,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Container(
-                  width: screenWidth * 0.9,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.shade300,
-                        blurRadius: 5,
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(),
-                        const SizedBox(height: 20),
-                        _buildInfoRow('Severity', widget.severity),
-                        const SizedBox(height: 20),
-                        _buildDescriptionRow(),
-                        const SizedBox(height: 20),
-                        _buildInfoRowWithDate('Time', widget.timeCreated),
-                        const SizedBox(height: 20),
-                        if (alertState.status == 'RESOLVED')
-                          _buildInfoRowWithResolvedDate(
-                              'Resolved at', widget.timeResolved),
-                        const SizedBox(height: 20),
-                        _buildInfoRow('Status', alertState.status),
-                        const SizedBox(height: 20),
-                        if (alertState.status == 'PENDING') _buildResolveSwitch(),
-                      ],
+          body: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Container(
+                width: screenWidth * 0.9,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.shade300,
+                      blurRadius: 5,
                     ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHeader(),
+                      const SizedBox(height: 20),
+                      _buildInfoRow('Severity', widget.severity),
+                      const SizedBox(height: 20),
+                      _buildDescriptionRow(),
+                      const SizedBox(height: 20),
+                      _buildInfoRowWithDate('Time', widget.timeCreated),
+                      const SizedBox(height: 15),
+                      if (alertState.status == 'RESOLVED')
+                        _buildInfoRowWithResolvedDate(
+                            'Resolved at', widget.timeResolved),
+                      const SizedBox(height: 15),
+                      _buildInfoRow('Status', alertState.status),
+                      const SizedBox(height: 15),
+                      if (alertState.status == 'PENDING') _buildResolveSwitch(),
+                    ],
                   ),
                 ),
               ),
@@ -312,6 +310,7 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
       children: [
         Center(
           child: Row(
+          mainAxisSize: MainAxisSize.min,
             children: [
               FittedBox(
                 child: SizedBox(
@@ -323,25 +322,36 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
                 ),
               ),
               const SizedBox(width: 8),
-              EtzText(
-                text: widget.appName,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                maxLines:2,
-                overflow:TextOverflow.ellipsis
+              Expanded(
+                child: EtzText(
+                  text: widget.appName,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  maxLines:2,
+                  softWrap:true,
+                  overflow:TextOverflow.ellipsis
+                ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 8),
         Row(
+          crossAxisAlignment:CrossAxisAlignment.start,
           children: [
             EtzText(
               text: 'Title',
               fontWeight: FontWeight.bold,
             ),
             const SizedBox(width: 20),
-            EtzText(text: widget.title),
+         Expanded (
+            child: EtzText(
+              text: widget.title,
+              overflow: TextOverflow.ellipsis,
+              softWrap: true,
+              maxLines: 2,
+              ),
+        ),
           ],
         ),
       ],

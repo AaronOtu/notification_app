@@ -74,7 +74,7 @@ class NotificationFiltersNotifier extends StateNotifier<NotificationFilters> {
 
 final apiServiceProvider = Provider<ApiService>((ref) => ApiService());
 
-// Add timer for debouncing
+
 Timer? _debounceTimer;
 
 final notificationSearchProvider =
@@ -82,10 +82,10 @@ final notificationSearchProvider =
   final filters = ref.watch(notificationFiltersProvider);
   final apiService = ref.watch(apiServiceProvider);
 
-  // Cancel previous debounce timer
+
   _debounceTimer?.cancel();
 
-  // Create new timer
+
   return Future.delayed(const Duration(milliseconds: 300), () async {
     try {
       final results = await apiService.searchNotification(
@@ -96,7 +96,7 @@ final notificationSearchProvider =
         toAllRecipient: filters.toAllRecipient,
       );
 
-      // Sort results if needed
+      
       results.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       return results;

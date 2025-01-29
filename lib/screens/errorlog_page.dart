@@ -88,7 +88,7 @@ void _navigateToNotificationDetails(ErrorModel notification) async {
           backgroundColor: Colors.white,
           elevation: 0,
           title: const EtzText(
-            text: 'Error Details',
+            text: 'Error Logs',
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Colors.black,
@@ -97,8 +97,10 @@ void _navigateToNotificationDetails(ErrorModel notification) async {
          body: LiquidPullToRefresh(
           onRefresh: handleRefresh,
           child: 
-          notificationsState.when(
-            data: (notifications) => ListView.builder(
+           notificationsState.when(
+            data: (notifications) =>  notifications.isEmpty ? buildEmptyState()
+            
+             :ListView.builder(
                 padding: const EdgeInsets.all(8.0),
                 itemCount: notifications.length,
                 itemBuilder: (context, index) {
@@ -115,7 +117,7 @@ void _navigateToNotificationDetails(ErrorModel notification) async {
                   );
                 },
               ),
-              error: (error, stackTrace) => Text(error.toString()),
+              error: (error, stackTrace) => Center(child: Text(error.toString())),
               loading: () => const SizedBox.shrink())
       
          )
@@ -125,4 +127,28 @@ void _navigateToNotificationDetails(ErrorModel notification) async {
         ),
     );
   }
+
+ Widget buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Image(
+            image: AssetImage('assets/empty_notification.png'),
+            height: 64,
+            width: 64,
+          ),
+          const SizedBox(height: 16),
+          EtzText(
+            text: 'No Error Log notifications',
+            color: Colors.grey.shade600,
+          ),
+        ],
+      ),
+    );
+  }
+
+
+
 }
+

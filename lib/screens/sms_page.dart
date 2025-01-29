@@ -76,13 +76,13 @@ class _SmsPageState extends ConsumerState<SmsPage> {
         actions: [
           TextButton.icon(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.close),
-            label: const Text('Cancel'),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.grey,
-            ),
+            //icon: const Icon(Icons.close),
+            label:  EtzText(text:'Cancel',color:Colors.black),
+            // style: TextButton.styleFrom(
+            //   foregroundColor: Colors.grey,
+            // ),
           ),
-          ElevatedButton.icon(
+          TextButton.icon(
             onPressed: () async {
               if (_smsController.text.isNotEmpty) {
                 await ref.read(smsProvider.notifier).addSms(_smsController.text);
@@ -99,12 +99,12 @@ class _SmsPageState extends ConsumerState<SmsPage> {
                 }
               }
             },
-            icon: const Icon(Icons.add),
-            label: const Text('Add'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-            ),
+            //icon: const Icon(Icons.add),
+            label: EtzText(text: 'Add', color: Colors.black),
+            // style: ElevatedButton.styleFrom(
+            //   backgroundColor: Colors.blue,
+            //   foregroundColor: Colors.white,
+            // ),
           ),
         ],
       ),
@@ -115,6 +115,7 @@ class _SmsPageState extends ConsumerState<SmsPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15),
         ),
@@ -126,23 +127,23 @@ class _SmsPageState extends ConsumerState<SmsPage> {
               width: 24,
             ),
             const SizedBox(width: 10),
-            Text('Delete Number', style: TextStyle(color: Colors.red[700])),
+            EtzText(text:'Delete Number', color: Colors.red[700]),
           ],
         ),
-        content: Text(
-          'Are you sure you want to delete "$smsContent"?',
-          style: const TextStyle(fontSize: 16),
+        content: EtzText(
+         text: 'Are you sure you want to delete "$smsContent"?',fontSize: 16
+     
         ),
         actions: [
           TextButton.icon(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.close),
-            label: const Text('Cancel'),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.grey,
-            ),
+            //icon: const Icon(Icons.close),
+            label:  EtzText(text:'Cancel', color:Colors.black),
+            // style: TextButton.styleFrom(
+            //   foregroundColor: Colors.grey,
+            // ),
           ),
-          ElevatedButton.icon(
+          TextButton.icon(
             onPressed: () async {
               await ref.read(smsProvider.notifier).deleteSms(id);
               await ref.read(smsProvider.notifier).fetchSms();
@@ -150,17 +151,17 @@ class _SmsPageState extends ConsumerState<SmsPage> {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Phone number deleted successfully'),
+                    content: EtzText(text:'Phone number deleted successfully'),
                     backgroundColor: Colors.red,
                   ),
                 );
               }
             },
-            icon: const Icon(Icons.delete),
-            label: const Text('Delete'),
-            style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.grey,
-            ),
+           // icon: const Icon(Icons.delete),
+            label:  EtzText(text:'Delete', color:Colors.black),
+            // style: ElevatedButton.styleFrom(
+            //   foregroundColor: Colors.grey,
+            // ),
           ),
         ],
       ),
@@ -214,6 +215,7 @@ class _SmsPageState extends ConsumerState<SmsPage> {
                             filled: true,
                             fillColor: Colors.white,
                             hintText: 'Search phone numbers...',
+
                             prefixIcon: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: const Image(

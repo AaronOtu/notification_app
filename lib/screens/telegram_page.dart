@@ -55,14 +55,14 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
               width: 24,
             ),
             SizedBox(width: 10),
-            EtzText(text:'Telegram Link'),
+            EtzText(text:'Telegram chat_id'),
           ],
         ),
         content: TextField(
           controller: _telegramController,
           decoration: InputDecoration(
-            labelText: 'Telegram Link',
-            hintText: 'Enter Link',
+            labelText: 'Telegram chat_id',
+            hintText: 'Enter chat_id',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
             ),
@@ -71,17 +71,18 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
               borderSide: const BorderSide(color: Colors.blue, width: 2),
             ),
           ),
+          keyboardType: TextInputType.phone,
         ),
         actions: [
           TextButton.icon(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.close),
-            label: const Text('Cancel'),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.grey,
-            ),
+           // icon: const Icon(Icons.close),
+            label:  EtzText(text:'Cancel', color:Colors.black),
+            // style: TextButton.styleFrom(
+            //   foregroundColor: Colors.grey,
+            // ),
           ),
-          ElevatedButton.icon(
+          TextButton.icon(
             onPressed: () async {
               if (_telegramController.text.isNotEmpty) {
                 await ref.read(telegramProvider.notifier).addTelegram(_telegramController.text);
@@ -91,19 +92,19 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Telegram link added successfully'),
+                      content: Text('Telegram chat_id added successfully'),
                       backgroundColor: Colors.green,
                     ),
                   );
                 }
               }
             },
-            icon: const Icon(Icons.add),
-            label: const Text('Add'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-            ),
+            //icon: const Icon(Icons.add),
+            label:EtzText(text:'Add', color:Colors.black),
+            // style: ElevatedButton.styleFrom(
+            //   backgroundColor: Colors.blue,
+            //   foregroundColor: Colors.white,
+            // ),
           ),
         ],
       ),
@@ -114,6 +115,7 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor:Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15),
         ),
@@ -125,23 +127,23 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
               width: 24,
             ),
             const SizedBox(width: 10),
-            Text('Delete Link', style: TextStyle(color: Colors.red[700])),
+            EtzText(text:'Delete chat_id', color: Colors.red[700]),
           ],
         ),
-        content: Text(
-          'Are you sure you want to delete "$telegramContent"?',
-          style: const TextStyle(fontSize: 16),
+        content: EtzText(
+          text:'Are you sure you want to delete "$telegramContent"?',fontSize: 16,
+      // style: const TextStyle(),
         ),
         actions: [
           TextButton.icon(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.close),
-            label: const Text('Cancel'),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.grey,
-            ),
+            //icon: const Icon(Icons.close),
+            label: EtzText(text:'Cancel', color: Colors.black),
+            // style: TextButton.styleFrom(
+            //   foregroundColor: Colors.grey,
+            // ),
           ),
-          ElevatedButton.icon(
+          TextButton.icon(
             onPressed: () async {
               await ref.read(telegramProvider.notifier).deleteTelegram(id);
               await ref.read(telegramProvider.notifier).fetchTelegram();
@@ -149,17 +151,17 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Telegram link deleted successfully'),
+                    content: Text('Telegram chat_id deleted successfully'),
                     backgroundColor: Colors.red,
                   ),
                 );
               }
             },
-            icon: const Icon(Icons.delete),
-            label: const Text('Delete'),
-            style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.grey,
-            ),
+            //icon: const Icon(Icons.delete),
+            label:EtzText(text:'Delete', color:Colors.black),
+            // style: ElevatedButton.styleFrom(
+            //   foregroundColor: Colors.grey,
+            // ),
           ),
         ],
       ),
@@ -214,7 +216,7 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
                           decoration: InputDecoration(
                             filled: true,
                             fillColor: Colors.white,
-                            hintText: 'Search telegram links...',
+                            hintText: 'Search telegram chat_id...',
                             prefixIcon: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: const Image(
@@ -292,8 +294,8 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
           const SizedBox(height: 16),
           Text(
             _searchController.text.isEmpty
-                ? 'No telegram links added yet'
-                : 'No matching links found',
+                ? 'No telegram chat_id added yet'
+                : 'No matching chat_id found',
             style: TextStyle(
               fontSize: 18,
               color: Colors.grey[600],
@@ -327,7 +329,7 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
               const SizedBox(width: 16),
               Expanded(
                 child: Text(
-                  telegram.telegram ?? 'No link',
+                  telegram.telegram ?? 'No chat_id',
                   style: const TextStyle(
                     fontWeight: FontWeight.w500,
                   ),

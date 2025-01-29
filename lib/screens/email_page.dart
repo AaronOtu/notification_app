@@ -81,13 +81,13 @@ class _EmailPageState extends ConsumerState<EmailPage> {
         actions: [
           TextButton.icon(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.close),
-            label: const Text('Cancel'),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.grey,
-            ),
+            //icon: const Icon(Icons.close),
+            label:EtzText(text:'Cancel', color:Colors.black),
+            // style: TextButton.styleFrom(
+            //   foregroundColor: Colors.grey,
+            // ),
           ),
-          ElevatedButton.icon(
+          TextButton.icon(
             onPressed: () async {
               if (_emailController.text.isNotEmpty) {
                 await ref
@@ -106,12 +106,12 @@ class _EmailPageState extends ConsumerState<EmailPage> {
                 }
               }
             },
-            icon: const Icon(Icons.add),
-            label: const Text('Add'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-            ),
+            //icon: const Icon(Icons.add),
+            label:EtzText(text:'Add', color:Colors.black),
+            // style: ElevatedButton.styleFrom(
+            //   backgroundColor: Colors.blue,
+            //   foregroundColor: Colors.white,
+            // ),
           ),
         ],
       ),
@@ -122,6 +122,7 @@ class _EmailPageState extends ConsumerState<EmailPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor:Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15),
         ),
@@ -133,23 +134,23 @@ class _EmailPageState extends ConsumerState<EmailPage> {
               width: 24,
             ),
             const SizedBox(width: 10),
-            Text('Delete Email', style: TextStyle(color: Colors.red[700])),
+            EtzText(text:'Delete Email', color: Colors.red[700]),
           ],
         ),
-        content: Text(
-          'Are you sure you want to delete $email?',
-          style: const TextStyle(fontSize: 16),
+        content: EtzText(
+          text: 'Are you sure you want to delete $email?',fontSize: 16,
+          //style: const TextStyle(),
         ),
         actions: [
           TextButton.icon(
             onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.close),
-            label: const Text('Cancel'),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.grey,
-            ),
+            //icon: const Icon(Icons.close),
+            label: EtzText(text:'Cancel', color:Colors.black),
+            // style: TextButton.styleFrom(
+            //   foregroundColor: Colors.grey,
+            // ),
           ),
-          ElevatedButton.icon(
+          TextButton.icon(
             onPressed: () async {
               await ref.read(emailsProvider.notifier).deleteEmail(id);
               if (mounted) {
@@ -162,11 +163,11 @@ class _EmailPageState extends ConsumerState<EmailPage> {
                 );
               }
             },
-            icon: const Icon(Icons.delete),
-            label: const Text('Delete'),
-            style: ElevatedButton.styleFrom(
-              foregroundColor: Colors.grey,
-            ),
+           // icon: const Icon(Icons.delete),
+            label:EtzText(text:'Delete', color:Colors.black),
+            // style: ElevatedButton.styleFrom(
+            //   foregroundColor: Colors.grey,
+            // ),
           ),
         ],
       ),
