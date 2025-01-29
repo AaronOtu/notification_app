@@ -5,6 +5,9 @@ import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:notification_app/widgets/custom_text.dart';
 import 'package:notification_app/widgets/loader.dart';
 
+final isFirstVisitProvider = StateProvider<bool>((ref)=> true);
+final telegramLoadingProvider = StateProvider<bool>((ref)=>false);
+
 class TelegramPage extends ConsumerStatefulWidget {
   const TelegramPage({super.key});
 
@@ -15,14 +18,23 @@ class TelegramPage extends ConsumerStatefulWidget {
 class _TelegramPageState extends ConsumerState<TelegramPage> {
   final TextEditingController _telegramController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
-  bool _isLoading = true;
+  
 
   @override
   void initState() {
     super.initState();
     Future.microtask(() async {
+     final isFirstVisit = ref.read(isFirstVisitProvider);
+         
+         if(isFirstVisit){
+        ref.read(telegramLoadingProvider.notifier).state = true;
+        await ref.read(telegramProvider.notifier).fetchTelegram();
+        ref.read(telegramLoadingProvider.notifier).state = false;
+        ref.read(isFirstVisitProvider.notifier).state =false;
+         }
+         else{
       await ref.read(telegramProvider.notifier).fetchTelegram();
-      setState(() => _isLoading = false);
+         }
     });
   }
 
@@ -34,9 +46,10 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
   }
 
   Future<void> _handleRefresh() async {
-    setState(() => _isLoading = true);
+     ref.read(telegramLoadingProvider.notifier).state =true;
     await ref.read(telegramProvider.notifier).fetchTelegram();
-    setState(() => _isLoading = false);
+     ref.read(telegramLoadingProvider.notifier).state = false;
+    
   }
 
   void _showAddTelegramDialog() {
@@ -76,18 +89,20 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
         actions: [
           TextButton.icon(
             onPressed: () => Navigator.pop(context),
-           // icon: const Icon(Icons.close),
             label:  EtzText(text:'Cancel', color:Colors.black),
-            // style: TextButton.styleFrom(
-            //   foregroundColor: Colors.grey,
-            // ),
+        
           ),
           TextButton.icon(
             onPressed: () async {
               if (_telegramController.text.isNotEmpty) {
+                ref.read(telegramLoadingProvider.notifier).state = true;
+
                 await ref.read(telegramProvider.notifier).addTelegram(_telegramController.text);
-                _telegramController.clear();
                 await ref.read(telegramProvider.notifier).fetchTelegram();
+
+                ref.read(telegramLoadingProvider.notifier).state = false;
+
+                _telegramController.clear();
                 if (mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -101,10 +116,7 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
             },
             //icon: const Icon(Icons.add),
             label:EtzText(text:'Add', color:Colors.black),
-            // style: ElevatedButton.styleFrom(
-            //   backgroundColor: Colors.blue,
-            //   foregroundColor: Colors.white,
-            // ),
+      
           ),
         ],
       ),
@@ -137,16 +149,16 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
         actions: [
           TextButton.icon(
             onPressed: () => Navigator.pop(context),
-            //icon: const Icon(Icons.close),
+        
             label: EtzText(text:'Cancel', color: Colors.black),
-            // style: TextButton.styleFrom(
-            //   foregroundColor: Colors.grey,
-            // ),
+    
           ),
           TextButton.icon(
             onPressed: () async {
+              ref.read(telegramLoadingProvider.notifier).state = true;
               await ref.read(telegramProvider.notifier).deleteTelegram(id);
               await ref.read(telegramProvider.notifier).fetchTelegram();
+              ref.read(telegramLoadingProvider.notifier).state = false;
               if (mounted) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -157,11 +169,9 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
                 );
               }
             },
-            //icon: const Icon(Icons.delete),
+
             label:EtzText(text:'Delete', color:Colors.black),
-            // style: ElevatedButton.styleFrom(
-            //   foregroundColor: Colors.grey,
-            // ),
+    
           ),
         ],
       ),
@@ -171,6 +181,7 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
   @override
   Widget build(BuildContext context) {
     final telegramList = ref.watch(telegramProvider);
+    final isLoading = ref.watch(telegramLoadingProvider);
     final filteredTelegramList = telegramList
         .where((telegram) =>
             telegram.telegram
@@ -180,7 +191,7 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
         .toList();
 
     return XcelLoader(
-      isLoading: _isLoading,
+      isLoading: isLoading,
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(

@@ -10,12 +10,13 @@ class TelegramNotifier extends StateNotifier<List<ResponseTelegram>> {
   final ApiService _apiService = ApiService();
 
   Future<void> fetchTelegram() async {
-    try {
-      final List<ResponseTelegram> telegrams = await _apiService.fetchTelegram();
-      state = telegrams;
-    } catch (e) {
-      debugPrint('Error fetching telegram messages: $e');
-    }
+        try {
+        final List<ResponseTelegram> telegrams = await _apiService.fetchTelegram();
+        state = telegrams;
+      } catch (e) {
+        debugPrint('Error fetching telegram messages: $e');
+      }
+    
   }
 
   Future<void> addTelegram(String telegram) async {
@@ -33,6 +34,7 @@ class TelegramNotifier extends StateNotifier<List<ResponseTelegram>> {
     try {
       await _apiService.deleteTelegram(id);
       state = state.where((telegram) => telegram.id != id).toList();
+      await _apiService.fetchTelegram();
     } catch (e) {
       debugPrint('Error deleting telegram message: $e');
     }

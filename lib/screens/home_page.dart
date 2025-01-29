@@ -93,7 +93,7 @@ class SchedulerStatusNotifier extends StateNotifier<SchedulerState> {
     try {
       state = state.copyWith(isLoading: true);
 
-      // Call API to toggle scheduler
+      
       final success = await _apiService.resetScheduler(!state.isActive);
 
       if (success) {

@@ -32,6 +32,7 @@ class EmailNotifier extends StateNotifier<List<Response>> {
     try {
       await _apiService.deleteEmail(id);
       state = state.where((email) => email.id != id).toList();
+      await _apiService.fetchEmails();
     } catch (e) {
       debugPrint('Error deleting email: $e');
     }

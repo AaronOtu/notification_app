@@ -5,6 +5,9 @@ import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:notification_app/widgets/custom_text.dart';
 import 'package:notification_app/widgets/loader.dart';
 
+final isFirstVisitProvider = StateProvider<bool>((ref) => true);
+final smsLoadingProvider = StateProvider<bool>((ref) => false);
+
 class SmsPage extends ConsumerStatefulWidget {
   const SmsPage({super.key});
 
@@ -15,16 +18,27 @@ class SmsPage extends ConsumerStatefulWidget {
 class _SmsPageState extends ConsumerState<SmsPage> {
   final TextEditingController _smsController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
-  bool _isLoading = true;
+
+
 
   @override
   void initState() {
     super.initState();
     Future.microtask(() async {
-      await ref.read(smsProvider.notifier).fetchSms();
-      setState(() => _isLoading = false);
+      final isFirstVisit = ref.read(isFirstVisitProvider);
+
+      if (isFirstVisit) {
+        ref.read(smsLoadingProvider.notifier).state = true;
+        await ref.read(smsProvider.notifier).fetchSms();
+        ref.read(smsLoadingProvider.notifier).state = false;
+        ref.read(isFirstVisitProvider.notifier).state = false;
+      } else {
+        await ref.read(smsProvider.notifier).fetchSms();
+      }
     });
   }
+
+  
 
   @override
   void dispose() {
@@ -33,10 +47,11 @@ class _SmsPageState extends ConsumerState<SmsPage> {
     super.dispose();
   }
 
+
   Future<void> _handleRefresh() async {
-    setState(() => _isLoading = true);
+    ref.read(smsLoadingProvider.notifier).state = true;
     await ref.read(smsProvider.notifier).fetchSms();
-    setState(() => _isLoading = false);
+    ref.read(smsLoadingProvider.notifier).state = false;
   }
 
   void _showAddSmsDialog() {
@@ -55,7 +70,7 @@ class _SmsPageState extends ConsumerState<SmsPage> {
               width: 24,
             ),
             SizedBox(width: 10),
-            EtzText(text:'SMS'),
+            EtzText(text: 'SMS'),
           ],
         ),
         content: TextField(
@@ -77,17 +92,26 @@ class _SmsPageState extends ConsumerState<SmsPage> {
           TextButton.icon(
             onPressed: () => Navigator.pop(context),
             //icon: const Icon(Icons.close),
-            label:  EtzText(text:'Cancel',color:Colors.black),
-            // style: TextButton.styleFrom(
-            //   foregroundColor: Colors.grey,
-            // ),
+            label: EtzText(text: 'Cancel', color: Colors.black),
+   
           ),
           TextButton.icon(
+           
+
             onPressed: () async {
               if (_smsController.text.isNotEmpty) {
-                await ref.read(smsProvider.notifier).addSms(_smsController.text);
-                _smsController.clear();
+                // Show loading while adding
+                ref.read(smsLoadingProvider.notifier).state = true;
+
+                await ref
+                    .read(smsProvider.notifier)
+                    .addSms(_smsController.text);
                 await ref.read(smsProvider.notifier).fetchSms();
+
+                // Hide loading after update
+                ref.read(smsLoadingProvider.notifier).state = false;
+
+                _smsController.clear();
                 if (mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -99,12 +123,9 @@ class _SmsPageState extends ConsumerState<SmsPage> {
                 }
               }
             },
-            //icon: const Icon(Icons.add),
+
             label: EtzText(text: 'Add', color: Colors.black),
-            // style: ElevatedButton.styleFrom(
-            //   backgroundColor: Colors.blue,
-            //   foregroundColor: Colors.white,
-            // ),
+       
           ),
         ],
       ),
@@ -127,41 +148,38 @@ class _SmsPageState extends ConsumerState<SmsPage> {
               width: 24,
             ),
             const SizedBox(width: 10),
-            EtzText(text:'Delete Number', color: Colors.red[700]),
+            EtzText(text: 'Delete Number', color: Colors.red[700]),
           ],
         ),
         content: EtzText(
-         text: 'Are you sure you want to delete "$smsContent"?',fontSize: 16
-     
-        ),
+            text: 'Are you sure you want to delete "$smsContent"?',
+            fontSize: 16),
         actions: [
           TextButton.icon(
             onPressed: () => Navigator.pop(context),
             //icon: const Icon(Icons.close),
-            label:  EtzText(text:'Cancel', color:Colors.black),
-            // style: TextButton.styleFrom(
-            //   foregroundColor: Colors.grey,
-            // ),
+            label: EtzText(text: 'Cancel', color: Colors.black),
+       
           ),
           TextButton.icon(
             onPressed: () async {
+              ref.read(smsLoadingProvider.notifier).state = true;
               await ref.read(smsProvider.notifier).deleteSms(id);
               await ref.read(smsProvider.notifier).fetchSms();
+              ref.read(smsLoadingProvider.notifier).state = false;
               if (mounted) {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: EtzText(text:'Phone number deleted successfully'),
+                    content: EtzText(text: 'Phone number deleted successfully'),
                     backgroundColor: Colors.red,
                   ),
                 );
               }
             },
-           // icon: const Icon(Icons.delete),
-            label:  EtzText(text:'Delete', color:Colors.black),
-            // style: ElevatedButton.styleFrom(
-            //   foregroundColor: Colors.grey,
-            // ),
+         
+            label: EtzText(text: 'Delete', color: Colors.black),
+   
           ),
         ],
       ),
@@ -171,14 +189,17 @@ class _SmsPageState extends ConsumerState<SmsPage> {
   @override
   Widget build(BuildContext context) {
     final smsList = ref.watch(smsProvider);
+    final isLoading = ref.watch(smsLoadingProvider);
     final filteredSmsList = smsList
         .where((sms) =>
-            sms.sms?.toLowerCase().contains(_searchController.text.toLowerCase()) ??
+            sms.sms
+                ?.toLowerCase()
+                .contains(_searchController.text.toLowerCase()) ??
             false)
         .toList();
 
     return XcelLoader(
-      isLoading: _isLoading,
+      isLoading: isLoading,
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
@@ -215,7 +236,6 @@ class _SmsPageState extends ConsumerState<SmsPage> {
                             filled: true,
                             fillColor: Colors.white,
                             hintText: 'Search phone numbers...',
-
                             prefixIcon: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: const Image(
@@ -225,12 +245,9 @@ class _SmsPageState extends ConsumerState<SmsPage> {
                               ),
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade300,
-                                width: 1.0
-                              )
-                            ),
+                                borderRadius: BorderRadius.circular(20),
+                                borderSide: BorderSide(
+                                    color: Colors.grey.shade300, width: 1.0)),
                           ),
                           onChanged: (value) => setState(() {}),
                         ),

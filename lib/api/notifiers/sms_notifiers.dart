@@ -10,14 +10,16 @@ class SmsNotifier extends StateNotifier<List<ResponseSms>> {
 
   Future<void> fetchSms() async {
 
-    if (state.isEmpty){
+    
       try {
+
         final List<ResponseSms> sms = await _apiService.fetchSms();
         state = sms;
+      
       } catch (e) {
         debugPrint('Error fetching sms: $e');
       }
-    }
+    
   
   }
 
@@ -36,6 +38,7 @@ class SmsNotifier extends StateNotifier<List<ResponseSms>> {
     try {
       await _apiService.deleteSms(id);
       state = state.where((sms) => sms.id != id).toList();
+      await _apiService.fetchSms();
     } catch (e) {
       debugPrint('Error deleting sms: $e');
     }

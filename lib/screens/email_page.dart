@@ -5,6 +5,9 @@ import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:notification_app/widgets/custom_text.dart';
 import 'package:notification_app/widgets/loader.dart';
 
+final isFirstVisitProvider = StateProvider<bool>((ref) => true);
+final emailLoadingProvider = StateProvider<bool>((ref) => false);
+
 class EmailPage extends ConsumerStatefulWidget {
   const EmailPage({super.key});
 
@@ -15,14 +18,23 @@ class EmailPage extends ConsumerStatefulWidget {
 class _EmailPageState extends ConsumerState<EmailPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
-  bool _isLoading = true; // Changed to true initially
+  
 
   @override
   void initState() {
     super.initState();
     Future.microtask(() async {
-      await ref.read(emailsProvider.notifier).fetchEmails();
-      setState(() => _isLoading = false);
+      final isFirstVisit = ref.read(isFirstVisitProvider);
+
+      if (isFirstVisit) {
+        ref.read(emailLoadingProvider.notifier).state = true;
+        await ref.read(emailsProvider.notifier).fetchEmails();
+        ref.read(emailLoadingProvider.notifier).state = false;
+        ref.read(isFirstVisitProvider.notifier).state = false;
+      } else {
+        await ref.read(emailsProvider.notifier).fetchEmails();
+      }
+
     });
   }
 
@@ -34,9 +46,12 @@ class _EmailPageState extends ConsumerState<EmailPage> {
   }
 
   Future<void> _handleRefresh() async {
-    setState(() => _isLoading = true);
+    ref.read(emailLoadingProvider.notifier).state = true;
+  
     await ref.read(emailsProvider.notifier).fetchEmails();
-    setState(() => _isLoading = false);
+
+    ref.read(emailLoadingProvider.notifier).state = false;
+ 
   }
 
   void _showAddEmailDialog() {
@@ -55,19 +70,14 @@ class _EmailPageState extends ConsumerState<EmailPage> {
               width: 24,
             ),
             SizedBox(width: 10),
-            EtzText(text:'Email'),
+            EtzText(text: 'Email'),
           ],
         ),
         content: TextField(
           controller: _emailController,
           decoration: InputDecoration(
             labelText: 'Email Address',
-            //hintText: 'Enter email address',
-            // prefixIcon: const Image(
-            //   image: AssetImage('assets/mail.png'),
-            //   height: 20,
-            //   width: 20,
-            // ),
+        
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
             ),
@@ -81,20 +91,21 @@ class _EmailPageState extends ConsumerState<EmailPage> {
         actions: [
           TextButton.icon(
             onPressed: () => Navigator.pop(context),
-            //icon: const Icon(Icons.close),
-            label:EtzText(text:'Cancel', color:Colors.black),
-            // style: TextButton.styleFrom(
-            //   foregroundColor: Colors.grey,
-            // ),
+       
+            label: EtzText(text: 'Cancel', color: Colors.black),
+         
           ),
           TextButton.icon(
             onPressed: () async {
               if (_emailController.text.isNotEmpty) {
+                ref.read(emailLoadingProvider.notifier).state = true;
                 await ref
                     .read(emailsProvider.notifier)
                     .addEmail(_emailController.text);
-                _emailController.clear();
                 await ref.read(emailsProvider.notifier).fetchEmails();
+
+                ref.read(emailLoadingProvider.notifier).state = false;
+                _emailController.clear();
                 if (mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -106,12 +117,9 @@ class _EmailPageState extends ConsumerState<EmailPage> {
                 }
               }
             },
-            //icon: const Icon(Icons.add),
-            label:EtzText(text:'Add', color:Colors.black),
-            // style: ElevatedButton.styleFrom(
-            //   backgroundColor: Colors.blue,
-            //   foregroundColor: Colors.white,
-            // ),
+    
+            label: EtzText(text: 'Add', color: Colors.black),
+         
           ),
         ],
       ),
@@ -122,7 +130,7 @@ class _EmailPageState extends ConsumerState<EmailPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor:Colors.white,
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15),
         ),
@@ -134,18 +142,18 @@ class _EmailPageState extends ConsumerState<EmailPage> {
               width: 24,
             ),
             const SizedBox(width: 10),
-            EtzText(text:'Delete Email', color: Colors.red[700]),
+            EtzText(text: 'Delete Email', color: Colors.red[700]),
           ],
         ),
         content: EtzText(
-          text: 'Are you sure you want to delete $email?',fontSize: 16,
+          text: 'Are you sure you want to delete $email?', fontSize: 16,
           //style: const TextStyle(),
         ),
         actions: [
           TextButton.icon(
             onPressed: () => Navigator.pop(context),
             //icon: const Icon(Icons.close),
-            label: EtzText(text:'Cancel', color:Colors.black),
+            label: EtzText(text: 'Cancel', color: Colors.black),
             // style: TextButton.styleFrom(
             //   foregroundColor: Colors.grey,
             // ),
@@ -163,11 +171,9 @@ class _EmailPageState extends ConsumerState<EmailPage> {
                 );
               }
             },
-           // icon: const Icon(Icons.delete),
-            label:EtzText(text:'Delete', color:Colors.black),
-            // style: ElevatedButton.styleFrom(
-            //   foregroundColor: Colors.grey,
-            // ),
+       
+            label: EtzText(text: 'Delete', color: Colors.black),
+       
           ),
         ],
       ),
@@ -177,6 +183,7 @@ class _EmailPageState extends ConsumerState<EmailPage> {
   @override
   Widget build(BuildContext context) {
     final emails = ref.watch(emailsProvider);
+    final isLoading = ref.watch(emailLoadingProvider);
     final filteredEmails = emails
         .where((email) =>
             email.email
@@ -186,7 +193,7 @@ class _EmailPageState extends ConsumerState<EmailPage> {
         .toList();
 
     return XcelLoader(
-      isLoading: _isLoading,
+      isLoading: isLoading,
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
@@ -222,14 +229,8 @@ class _EmailPageState extends ConsumerState<EmailPage> {
                           decoration: InputDecoration(
                             filled: true,
                             fillColor: Colors.white,
-                            // focusedBorder: OutlineInputBorder(
-                            //   borderRadius: BorderRadius.circular(20),
-                            //   borderSide: BorderSide(
-                            //     color: Colors
-                            //         .blueAccent, // Blue border when selected
-                            //     width: 2.0,
-                            //   ),
-                            // ),
+                          
+        
                             hintText: 'Search emails...',
                             prefixIcon: Padding(
                               padding: const EdgeInsets.all(8.0),
@@ -240,12 +241,9 @@ class _EmailPageState extends ConsumerState<EmailPage> {
                               ),
                             ),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(20),
-                              borderSide: BorderSide(
-                                color: Colors.grey.shade300,
-                                width:1.0
-                              )
-                            ),
+                                borderRadius: BorderRadius.circular(20),
+                                borderSide: BorderSide(
+                                    color: Colors.grey.shade300, width: 1.0)),
                           ),
                           onChanged: (value) => setState(() {}),
                         ),
