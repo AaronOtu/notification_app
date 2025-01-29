@@ -151,7 +151,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+    _refreshTimer = Timer.periodic(const Duration(seconds: 60), (_) {
       if (mounted) {
         _handleRefresh();
       }
@@ -400,7 +400,12 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
 
     if (shouldRefresh == true && mounted) {
-      await _handleRefresh();
+       
+       ref.invalidate(notificationSearchProvider);
+       ref.read(notificationStateProvider.notifier).loadNotifications;
+       setState((){});
+
+      //await _handleRefresh();
     }
   }
 
@@ -588,6 +593,11 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Consumer(
       builder: (context, ref, child) {
         final searchResults = ref.watch(notificationSearchProvider);
+
+        ref.listen(notificationStateProvider, (previous, next) {
+        ref.invalidate(notificationSearchProvider);
+      });
+
         final filters = ref.watch(notificationFiltersProvider);
 
         return searchResults.when(

@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:notification_app/api/api_service.dart';
 import 'package:notification_app/api/models/notification_model.dart';
 import 'package:notification_app/widgets/custom_text.dart';
-//import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:notification_app/widgets/loader.dart';
 
 // --------------------------- Providers ---------------------------
@@ -144,18 +144,39 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
     final alertState = ref.read(alertStatusProvider);
     
     if (alertState.wasJustResolved) {
+
+
+   ref.read(notificationDataProvider.notifier).fetchNotifications();
+   Navigator.of(context).pop(true);
+
+//Second Solution
+    //   Navigator.of(context).pop();
+    //    _handleRefresh().then((_) {
+    //   // Optionally handle any post-refresh actions if needed
+    // });
+      
+
+
+      //First Solution
+      /*
       setState(() {
         _isNavigatingBack = true;
       });
       
-      ref.read(alertStatusProvider.notifier).setLoading(true);
+      //ref.read(alertStatusProvider.notifier).setLoading(true);
       await _handleRefresh();
-      ref.read(alertStatusProvider.notifier).setLoading(false);
+      //ref.read(alertStatusProvider.notifier).setLoading(false);
+      Navigator.of(context).pop();
+
+      */
     }
 
-    if (mounted) {
-      Navigator.of(context).pop(true);
+    else{
+      Navigator.of(context).pop();
     }
+    // if (mounted) {
+    //   Navigator.of(context).pop(true);
+    // }
     return true;
   }
 
@@ -257,43 +278,46 @@ class _DisplayPageState extends ConsumerState<DisplayPage> {
             ),
             backgroundColor: Colors.white,
           ),
-          body: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Container(
-                width: screenWidth * 0.9,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.shade300,
-                      blurRadius: 5,
-                    ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeader(),
-                      const SizedBox(height: 20),
-                      _buildInfoRow('Severity', widget.severity),
-                      const SizedBox(height: 20),
-                      _buildDescriptionRow(),
-                      const SizedBox(height: 20),
-                      _buildInfoRowWithDate('Time', widget.timeCreated),
-                      const SizedBox(height: 15),
-                      if (alertState.status == 'RESOLVED')
-                        _buildInfoRowWithResolvedDate(
-                            'Resolved at', widget.timeResolved),
-                      const SizedBox(height: 15),
-                      _buildInfoRow('Status', alertState.status),
-                      const SizedBox(height: 15),
-                      if (alertState.status == 'PENDING') _buildResolveSwitch(),
+          body: LiquidPullToRefresh(
+            onRefresh:() async {},
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Container(
+                  width: screenWidth * 0.9,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.shade300,
+                        blurRadius: 5,
+                      ),
                     ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(),
+                        const SizedBox(height: 20),
+                        _buildInfoRow('Severity', widget.severity),
+                        const SizedBox(height: 20),
+                        _buildDescriptionRow(),
+                        const SizedBox(height: 20),
+                        _buildInfoRowWithDate('Time', widget.timeCreated),
+                        const SizedBox(height: 15),
+                        if (alertState.status == 'RESOLVED')
+                          _buildInfoRowWithResolvedDate(
+                              'Resolved at', widget.timeResolved),
+                        const SizedBox(height: 15),
+                        _buildInfoRow('Status', alertState.status),
+                        const SizedBox(height: 15),
+                        if (alertState.status == 'PENDING') _buildResolveSwitch(),
+                      ],
+                    ),
                   ),
                 ),
               ),
