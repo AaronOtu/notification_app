@@ -17,7 +17,6 @@ class ApiService {
   final String endpoint = 'https://sandbox-api.etranzact.com.gh/notify/api';
   //final String endpoint = 'http://192.168.56.1:3000/api';
 
-
   Future<T?> _handleNetworkCall<T>(Future<T> Function() apiCall) async {
     try {
       return await apiCall();
@@ -112,7 +111,6 @@ class ApiService {
     }
   }
 
-
   // get all errors
   Future<List<error.ErrorModel>> fetchErrorLogs() async {
     try {
@@ -142,11 +140,7 @@ class ApiService {
     }
   }
 
-
-
-
-// resolve alerts
-  Future<bool> resolveAlert(String id) async {
+  Future<NotificationModel?> resolveAlert(String id) async {
     try {
       final response = await http.patch(
         Uri.parse('$endpoint/alert-toggle/$id'),
@@ -158,17 +152,18 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
-        final String notificationData = data['response']['status'];
-        log('Alert with ID $id is $notificationData');
-        return true;
+        // Parse the response into a NotificationModel
+        final notification = NotificationModel.fromJson(data['response']);
+        log('Alert with ID $id is resolved');
+        return notification;
       } else {
         log('Failed to resolve alert. Status Code: ${response.statusCode}');
         log('Response Body: ${response.body}');
-        return false;
+        return null;
       }
     } catch (e) {
       log('Error resolving alert with ID $id: $e');
-      return false;
+      return null;
     }
   }
 
@@ -381,61 +376,59 @@ class ApiService {
     }
   }
 
+  Future<List<NotificationModel>> searchNotification({
+    String? appName,
+    String? severity,
+    String? channel,
+    String? createdAt,
+    bool? toAllRecipient,
+  }) async {
+    try {
+      final queryParams = <String, String>{};
 
-
- Future<List<NotificationModel>> searchNotification({
-  String? appName,
-  String? severity,
-  String? channel,
-  String? createdAt,
-  bool? toAllRecipient,
-}) async {
-  try {
-    final queryParams = <String, String>{};
-
-    if (appName != null && appName.isNotEmpty) {
-      queryParams['appName'] = appName;
-    }
-    if (severity != null && severity.isNotEmpty) {
-      queryParams['severity'] = severity;
-    }
-    if (channel != null && channel.isNotEmpty) {
-      queryParams['channel'] = channel;
-    }
-    if (createdAt != null && createdAt.isNotEmpty) {
-      queryParams['createdAt'] = createdAt;
-    }
-    if (toAllRecipient != null) {
-      queryParams['toAllRecipient'] = toAllRecipient.toString();
-    }
-
-    final uri = Uri.parse('$endpoint/search').replace(queryParameters: queryParams);
-
-    final response = await http.get(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-    );
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> decodedBody = json.decode(response.body);
-
-      // Check for key `response` in the decoded JSON
-      if (decodedBody.containsKey('response')) {
-        final List<dynamic> data = decodedBody['response'];
-        return data
-            .map((item) => NotificationModel.fromJson(item as Map<String, dynamic>))
-            .toList();
-      } else {
-        // Handle cases where the response is not in the expected format
-        log('Unexpected JSON structure: $decodedBody');
-        throw Exception('Unexpected response format: missing "response" key');
+      if (appName != null && appName.isNotEmpty) {
+        queryParams['appName'] = appName;
       }
-    }
+      if (severity != null && severity.isNotEmpty) {
+        queryParams['severity'] = severity;
+      }
+      if (channel != null && channel.isNotEmpty) {
+        queryParams['channel'] = channel;
+      }
+      if (createdAt != null && createdAt.isNotEmpty) {
+        queryParams['createdAt'] = createdAt;
+      }
+      if (toAllRecipient != null) {
+        queryParams['toAllRecipient'] = toAllRecipient.toString();
+      }
 
-    throw Exception('Failed to fetch notifications: ${response.statusCode}');
-  } catch (e) {
-    log('Error fetching notifications for filtering: $e');
-    rethrow;
+      final uri =
+          Uri.parse('$endpoint/search').replace(queryParameters: queryParams);
+
+      final response = await http.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> decodedBody = json.decode(response.body);
+
+        if (decodedBody.containsKey('response')) {
+          final List<dynamic> data = decodedBody['response'];
+          return data
+              .map((item) =>
+                  NotificationModel.fromJson(item as Map<String, dynamic>))
+              .toList();
+        } else {
+          log('Unexpected JSON structure: $decodedBody');
+          throw Exception('Unexpected response format: missing "response" key');
+        }
+      }
+
+      throw Exception('Failed to fetch notifications: ${response.statusCode}');
+    } catch (e) {
+      log('Error fetching notifications for filtering: $e');
+      rethrow;
+    }
   }
-}
 }
