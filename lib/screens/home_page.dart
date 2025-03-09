@@ -447,6 +447,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
+
+
   Widget _buildFilterRow() {
     final filters = ref.watch(notificationFiltersProvider);
     final activeFilters = [

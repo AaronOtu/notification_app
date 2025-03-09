@@ -11,11 +11,14 @@ import 'dart:developer';
 import 'package:notification_app/api/models/sms_response.dart';
 import 'package:notification_app/api/models/telegram_respone.dart';
 import 'package:pretty_logger/pretty_logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 //import 'package:logger/logger.dart';
 
 class ApiService {
   final String endpoint = 'https://sandbox-api.etranzact.com.gh/notify/api';
   //final String endpoint = 'http://192.168.56.1:3000/api';
+
+  static const String _notificationsCacheKey = 'cached_notifications';
 
   Future<T?> _handleNetworkCall<T>(Future<T> Function() apiCall) async {
     try {
@@ -95,20 +98,52 @@ class ApiService {
 
         if (decodedBody.containsKey('response')) {
           final List<dynamic> data = decodedBody['response'];
-          return data
+          final List<NotificationModel> notification = data
               .map((item) =>
                   NotificationModel.fromJson(item as Map<String, dynamic>))
               .toList();
+
+         //cache notifications
+         await _cacheNotifications(notification);
+       
+          return notification;
         } else {
           throw Exception('Invalid JSON structure: missing "response" key');
         }
       } else {
-        throw Exception('Failed to load notifications: ${response.statusCode}');
+        return await _getCachedNotifications();
+        //throw Exception('Failed to load notifications: ${response.statusCode}');
       }
     } catch (e) {
       log('Error fetching alerts: $e');
-      throw Exception('Error fetching alerts: $e');
+       return await _getCachedNotifications();
+      //throw Exception('Error fetching alerts: $e');
     }
+  }
+
+  // Cache notifications to SharedPreferences
+  Future<void> _cacheNotifications(
+      List<NotificationModel> notifications) async {
+    final prefs = await SharedPreferences.getInstance();
+    final notificationsJson = notifications.map((n) => n.toJson()).toList();
+    await prefs.setString(
+        _notificationsCacheKey, jsonEncode(notificationsJson));
+  }
+
+  // Retrieve cached notifications
+  Future<List<NotificationModel>> _getCachedNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedNotificationsJson = prefs.getString(_notificationsCacheKey);
+
+    if (cachedNotificationsJson != null) {
+      final List<dynamic> cachedData = jsonDecode(cachedNotificationsJson);
+      return cachedData
+          .map((item) => NotificationModel.fromJson(item))
+          .toList();
+    }
+
+    // Return empty list if no cached data
+    return [];
   }
 
   // get all errors

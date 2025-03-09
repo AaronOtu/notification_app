@@ -1,0 +1,84 @@
+this file will me to cache data
+
+import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+class ApiService {
+  final String endpoint = 'https://sandbox-api.etranzact.com.gh/notify/api';
+  static const String _notificationsCacheKey = 'cached_notifications';
+
+  // Fetch alerts with caching mechanism
+  Future<List<NotificationModel>> fetchAlerts() async {
+    try {
+      final response = await http.get(Uri.parse('$endpoint/alerts'));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> decodedBody = jsonDecode(response.body);
+
+        if (decodedBody.containsKey('response')) {
+          final List<dynamic> data = decodedBody['response'];
+          final List<NotificationModel> notifications = data
+              .map((item) => NotificationModel.fromJson(item as Map<String, dynamic>))
+              .toList();
+
+          // Cache the fetched notifications
+          await _cacheNotifications(notifications);
+
+          return notifications;
+        } else {
+          throw Exception('Invalid JSON structure: missing "response" key');
+        }
+      } else {
+        // If API call fails, try to retrieve cached data
+        return await _getCachedNotifications();
+      }
+    } catch (e) {
+      // On any network or parsing error, retrieve cached data
+      return await _getCachedNotifications();
+    }
+  }
+
+  // Cache notifications to SharedPreferences
+  Future<void> _cacheNotifications(List<NotificationModel> notifications) async {
+    final prefs = await SharedPreferences.getInstance();
+    final notificationsJson = notifications.map((n) => n.toJson()).toList();
+    await prefs.setString(_notificationsCacheKey, jsonEncode(notificationsJson));
+  }
+
+  // Retrieve cached notifications
+  Future<List<NotificationModel>> _getCachedNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedNotificationsJson = prefs.getString(_notificationsCacheKey);
+
+    if (cachedNotificationsJson != null) {
+      final List<dynamic> cachedData = jsonDecode(cachedNotificationsJson);
+      return cachedData
+          .map((item) => NotificationModel.fromJson(item))
+          .toList();
+    }
+
+    // Return empty list if no cached data
+    return [];
+  }
+
+  // Similar caching can be implemented for other fetch methods
+  Future<List<error.ErrorModel>> fetchErrorLogs() async {
+    try {
+      final response = await http.get(Uri.parse('$endpoint/errorLogs'));
+
+      if (response.statusCode == 200) {
+        // Existing implementation...
+      } else {
+        // Consider adding similar caching mechanism
+        return [];
+      }
+    } catch (e) {
+      // Handle errors and potentially return cached data
+      return [];
+    }
+  }
+
+  // Other existing methods remain the same...
+}
