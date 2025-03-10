@@ -82,3 +82,55 @@ class ApiService {
 
   // Other existing methods remain the same...
 }
+
+
+
+
+
+
+  Future<List<Response>> fetchEmails() async {
+  try {
+    final response = await http.get(Uri.parse('$endpoint/email'));
+
+    if (response.statusCode == 200) {
+      log('Response Body: ${response.body}');
+      final EmailModel emailModel = emailModelFromJson(response.body);
+      final emails = emailModel.response ?? [];
+      
+      // Cache the emails
+      await _cacheEmails(emails);
+      
+      return emails;
+    } else {
+      // Return cached emails if request fails
+      return await _getCachedEmails();
+    }
+  } catch (e) {
+    log('Error fetching emails: $e');
+    // Return cached emails when an exception occurs
+    return await _getCachedEmails();
+  }
+}
+
+// Cache emails to SharedPreferences
+Future<void> _cacheEmails(List<Response> emails) async {
+  final prefs = await SharedPreferences.getInstance();
+  final emailsJson = emails.map((email) => email.toJson()).toList();
+  await prefs.setString('_emailsCacheKey', jsonEncode(emailsJson));
+}
+
+// Retrieve cached emails
+Future<List<Response>> _getCachedEmails() async {
+  final prefs = await SharedPreferences.getInstance();
+  final cachedEmailsJson = prefs.getString('_emailsCacheKey');
+
+  if (cachedEmailsJson != null) {
+    final List<dynamic> cachedData = jsonDecode(cachedEmailsJson);
+    return cachedData
+        .map((item) => Response.fromJson(item))
+        .toList();
+  }
+
+  // Return empty list if no cached data
+  return [];
+}

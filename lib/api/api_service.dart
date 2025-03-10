@@ -103,9 +103,9 @@ class ApiService {
                   NotificationModel.fromJson(item as Map<String, dynamic>))
               .toList();
 
-         //cache notifications
-         await _cacheNotifications(notification);
-       
+          //cache notifications
+          await _cacheNotifications(notification);
+
           return notification;
         } else {
           throw Exception('Invalid JSON structure: missing "response" key');
@@ -116,7 +116,7 @@ class ApiService {
       }
     } catch (e) {
       log('Error fetching alerts: $e');
-       return await _getCachedNotifications();
+      return await _getCachedNotifications();
       //throw Exception('Error fetching alerts: $e');
     }
   }
@@ -236,14 +236,48 @@ class ApiService {
       if (response.statusCode == 200) {
         log('Response Body: ${response.body}');
         final EmailModel emailModel = emailModelFromJson(response.body);
-        return emailModel.response ?? [];
+        final emails = emailModel.response ?? [];
+        await _cacheEmails(emails);
+
+        return emails;
+      } else {
+        return await _getCachedEmails();
       }
 
-      throw Exception('Failed to fetch emails: ${response.statusCode}');
+      // throw Exception('Failed to fetch emails: ${response.statusCode}');
     } catch (e) {
       log('Error fetching emails: $e');
-      rethrow;
+      //rethrow;
+      return await _getCachedEmails();
     }
+  }
+
+// Cache emails to SharedPreferences
+  Future<void> _cacheEmails(List<Response> emails) async {
+    final prefs = await SharedPreferences.getInstance();
+    // Convert each Response to a JSON map first
+    final List<Map<String, dynamic>> emailsJsonList =
+        emails.map((email) => email.toJson()).toList();
+    // Then encode the entire list
+    await prefs.setString('_emailsCacheKey', jsonEncode(emailsJsonList));
+  }
+
+// Retrieve cached emails
+  Future<List<Response>> _getCachedEmails() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedEmailsJson = prefs.getString('_emailsCacheKey');
+
+    if (cachedEmailsJson != null) {
+      // Decode the JSON string to a List first
+      final List<dynamic> cachedData = jsonDecode(cachedEmailsJson);
+      // Then map each item to a Response object
+      return cachedData
+          .map((item) => Response.fromJson(item as Map<String, dynamic>))
+          .toList();
+    }
+
+    // Return empty list if no cached data
+    return [];
   }
 
   /// Add a new email
@@ -296,14 +330,45 @@ class ApiService {
       if (response.statusCode == 200) {
         log('Response Body: ${response.body}');
         final SmsModel smsModel = smsModelFromJson(response.body);
-        return smsModel.response ?? [];
+        final sms = smsModel.response ?? [];
+        await _cacheSms(sms);
+        return sms;
+      } else {
+        return await _getCachedSms();
       }
 
-      throw Exception('Failed to fetch sms: ${response.statusCode}');
+      //throw Exception('Failed to fetch sms: ${response.statusCode}');
     } catch (e) {
       log('Error fetching sms: $e');
-      rethrow;
+      // rethrow;
+      return await _getCachedSms();
     }
+  }
+
+  Future<void> _cacheSms(List<ResponseSms> sms) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final List<Map<String, dynamic>> smsJsonList =
+        sms.map((sms) => sms.toJson()).toList();
+
+    await prefs.setString('_smsCacheKey', jsonEncode(smsJsonList));
+  }
+
+  Future<List<ResponseSms>> _getCachedSms() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedSmsJson = prefs.getString('_smsCacheKey');
+
+    if (cachedSmsJson != null) {
+      // Decode the JSON string to a List first
+      final List<dynamic> cachedData = jsonDecode(cachedSmsJson);
+      // Then map each item to a Response object
+      return cachedData
+          .map((item) => ResponseSms.fromJson(item as Map<String, dynamic>))
+          .toList();
+    }
+
+    // Return empty list if no cached data
+    return [];
   }
 
   /// Add a new SMS
@@ -357,15 +422,46 @@ class ApiService {
         log('Response Body: ${response.body}');
         final TelegramModel telegramModel =
             telegramModelFromJson(response.body);
-        return telegramModel.response ?? [];
+        final telegram = telegramModel.response ?? [];
+        await _cacheTelegram(telegram);
+        return telegram;
+      } else {
+        return _getCachedTelegram();
       }
 
-      throw Exception(
-          'Failed to fetch telegram messages: ${response.statusCode}');
+      //throw Exception('Failed to fetch telegram messages: ${response.statusCode}');
     } catch (e) {
       log('Error fetching telegram messages: $e');
-      rethrow;
+      //rethrow;
+      return _getCachedTelegram();
     }
+  }
+
+  Future<void> _cacheTelegram(List<ResponseTelegram> telegram) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final List<Map<String, dynamic>> telegramJsonList =
+        telegram.map((telegram) => telegram.toJson()).toList();
+
+    await prefs.setString('_telegramCacheKey', jsonEncode(telegramJsonList));
+  }
+
+  Future<List<ResponseTelegram>> _getCachedTelegram() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedTelegramJson = prefs.getString('_telegramCacheKey');
+
+    if (cachedTelegramJson != null) {
+      // Decode the JSON string to a List first
+      final List<dynamic> cachedData = jsonDecode(cachedTelegramJson);
+      // Then map each item to a Response object
+      return cachedData
+          .map(
+              (item) => ResponseTelegram.fromJson(item as Map<String, dynamic>))
+          .toList();
+    }
+
+    // Return empty list if no cached data
+    return [];
   }
 
   /// Add a new Telegram message
