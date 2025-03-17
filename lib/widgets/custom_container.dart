@@ -141,7 +141,7 @@ class NotificationWidget extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     EtzText(
-                      text: body,
+                      text: body ,
                       color: Colors.grey.shade700,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

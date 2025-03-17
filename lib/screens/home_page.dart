@@ -417,6 +417,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     return XcelLoader(
       isLoading: notificationsState is AsyncLoading,
       child: Scaffold(
+        
         backgroundColor: Colors.white,
         appBar: _buildAppBar(),
         drawer: _buildDrawer(),
@@ -505,22 +506,22 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget _buildDrawer() {
     final drawerItems = [
       {
-        'icon': const AssetImage('assets/mail.png'),
+        'icon': const AssetImage('assets/aaron.png'),
         'title': 'Email',
         'screen': const EmailPage()
       },
       {
-        'icon': const AssetImage('assets/chat.png'),
+        'icon': const AssetImage('assets/sms1.png'),
         'title': 'SMS',
         'screen': const SmsPage()
       },
       {
-        'icon': const AssetImage('assets/telegram.png'),
+        'icon': const AssetImage('assets/telegrams.png'),
         'title': 'Telegram',
         'screen': const TelegramPage()
       },
       {
-        'icon': const AssetImage('assets/error.png'),
+        'icon': const AssetImage('assets/error1.png'),
         'title': 'Error Logs',
         'screen': const ErrorlogPage()
       },
@@ -530,30 +531,41 @@ class _HomePageState extends ConsumerState<HomePage> {
       backgroundColor: Colors.white,
       child: ListView(
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.white,
-            ),
-            child: Center(
-              child: EtzText(
-                text: 'Settings',
-                color: Colors.black,
-                fontSize: 24,
-              ),
-            ),
-          ),
+          // const DrawerHeader(
+          //   decoration: BoxDecoration(
+          //     color: Colors.white,
+          //   ),
+          //   child: Center(
+          //     child: EtzText(
+          //       text: 'Settings',
+          //       color: Colors.black,
+          //       fontSize: 24,
+          //     ),
+          //   ),
+          // ),
+          const SizedBox(height: 16),
+          Center(child: EtzText(text: 'Settings', fontSize: 20, fontWeight: FontWeight.bold,)),
+          const SizedBox(height: 16),
           ...drawerItems.map(
             (item) => Padding(
               padding:
                   const EdgeInsets.symmetric(vertical: 4.0, horizontal: 16),
-              child: ListTile(
-                leading: Image(
-                  image: item['icon'] as AssetImage,
-                  width: 24,
-                  height: 24,
+              child: Container(
+                decoration: BoxDecoration(
+                 
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.grey.shade300),
                 ),
-                title: EtzText(text: item['title'] as String, fontSize: 16),
-                onTap: () => _navigateToScreen(item['screen'] as Widget),
+                child: ListTile(
+                  //trailing: const Icon(Icons.arrow_forward_ios,),
+                  leading: Image(
+                    image: item['icon'] as AssetImage,
+                    width: 24,
+                    height: 24,
+                  ),
+                  title: EtzText(text: item['title'] as String, fontSize: 16),
+                  onTap: () => _navigateToScreen(item['screen'] as Widget),
+                ),
               ),
             ),
           ),
@@ -667,7 +679,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   severity: notification.severity,
                   status: notification.status,
                   title: notification.title,
-                  body: notification.body,
+                  body:(notification.body.isEmpty) ? 'N/A' : notification.body,
                   time: formatTime(notification.createdAt),
                   timeCreated: notification.createdAt,
                   onPressed: () => _navigateToNotificationDetails(notification),
@@ -778,47 +790,53 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   Widget _buildSchedulerSwitch() {
     final schedulerState = ref.watch(schedulerStatusProvider);
-    return ListTile(
-      leading: const Image(
-        image: AssetImage('assets/schedule.png'),
-        width: 24,
-        height: 24,
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(10),
       ),
-      title: const EtzText(
-        text: 'Scheduler',
-        fontSize: 16,
-      ),
-      trailing: Transform.scale(
-        scale: 0.8,
-        child: Switch(
-          activeColor: Colors.white,
-          activeTrackColor: Colors.blue,
-          inactiveTrackColor: Colors.grey.shade200,
-          value: schedulerState.isActive,
-          onChanged: schedulerState.isLoading
-              ? null
-              : (bool value) async {
-                  // Show confirmation dialog based on the intended state
-                  final shouldChange =
-                      await _showSchedulerConfirmationDialog(value);
-                  if (shouldChange && mounted) {
-                    try {
-                      await ref
-                          .read(schedulerStatusProvider.notifier)
-                          .toggleScheduler();
-                      if (mounted) {
-                        _showSnackBar(
-                          'Scheduler ${value ? 'activated' : 'deactivated'} successfully!',
-                        );
-                      }
-                    } catch (error) {
-                      if (mounted) {
-                        _showSnackBar(
-                            'Failed to toggle scheduler: ${error.toString()}');
+      child: ListTile(
+        leading: const Image(
+          image: AssetImage('assets/calenda.png'),
+          width: 24,
+          height: 24,
+        ),
+        title: const EtzText(
+          text: 'Scheduler',
+          fontSize: 16,
+        ),
+        trailing: Transform.scale(
+          scale: 0.8,
+          child: Switch(
+            activeColor: Colors.white,
+            activeTrackColor: Colors.black,
+            inactiveTrackColor: Colors.grey.shade200,
+            value: schedulerState.isActive,
+            onChanged: schedulerState.isLoading
+                ? null
+                : (bool value) async {
+                    // Show confirmation dialog based on the intended state
+                    final shouldChange =
+                        await _showSchedulerConfirmationDialog(value);
+                    if (shouldChange && mounted) {
+                      try {
+                        await ref
+                            .read(schedulerStatusProvider.notifier)
+                            .toggleScheduler();
+                        if (mounted) {
+                          _showSnackBar(
+                            'Scheduler ${value ? 'activated' : 'deactivated'} successfully!',
+                          );
+                        }
+                      } catch (error) {
+                        if (mounted) {
+                          _showSnackBar(
+                              'Failed to toggle scheduler: ${error.toString()}');
+                        }
                       }
                     }
-                  }
-                },
+                  },
+          ),
         ),
       ),
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notification_app/api/notifiers/email_notifiers.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+import 'package:notification_app/widgets/add_dialog.dart';
 import 'package:notification_app/widgets/custom_text.dart';
 import 'package:notification_app/widgets/loader.dart';
 
@@ -18,7 +19,6 @@ class EmailPage extends ConsumerStatefulWidget {
 class _EmailPageState extends ConsumerState<EmailPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
-  
 
   @override
   void initState() {
@@ -34,7 +34,6 @@ class _EmailPageState extends ConsumerState<EmailPage> {
       } else {
         await ref.read(emailsProvider.notifier).fetchEmails();
       }
-
     });
   }
 
@@ -47,11 +46,10 @@ class _EmailPageState extends ConsumerState<EmailPage> {
 
   Future<void> _handleRefresh() async {
     ref.read(emailLoadingProvider.notifier).state = true;
-  
+
     await ref.read(emailsProvider.notifier).fetchEmails();
 
     ref.read(emailLoadingProvider.notifier).state = false;
- 
   }
 
   void _showAddEmailDialog() {
@@ -77,7 +75,6 @@ class _EmailPageState extends ConsumerState<EmailPage> {
           controller: _emailController,
           decoration: InputDecoration(
             labelText: 'Email Address',
-        
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
             ),
@@ -91,9 +88,7 @@ class _EmailPageState extends ConsumerState<EmailPage> {
         actions: [
           TextButton.icon(
             onPressed: () => Navigator.pop(context),
-       
             label: EtzText(text: 'Cancel', color: Colors.black),
-         
           ),
           TextButton.icon(
             onPressed: () async {
@@ -117,13 +112,67 @@ class _EmailPageState extends ConsumerState<EmailPage> {
                 }
               }
             },
-    
             label: EtzText(text: 'Add', color: Colors.black),
-         
           ),
         ],
       ),
     );
+  }
+
+  void _showDeleteDialog(String id, String email) {
+    showDialog(
+      context: context,
+      builder: (context) => showDialogs(
+          isDelete: true,
+          image: 'assets/delete.png',
+          title: 'Delete Email',
+          onPressed: () async {
+            await ref.read(emailsProvider.notifier).deleteEmail(id);
+            if (mounted) {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Email deleted successfully'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          }),
+    );
+  }
+
+  void _showAddDialog() {
+    showDialog(
+        context: context,
+        builder: (context) => showDialogs(
+              hintText: 'Email Address',
+              controller: _emailController,
+              isDelete: false,
+              image: 'assets/aaron.png',
+              title: 'Add Email',
+              keyboardType: TextInputType.emailAddress,
+              onPressed: () async {
+                if (_emailController.text.isNotEmpty) {
+                  ref.read(emailLoadingProvider.notifier).state = true;
+                  await ref
+                      .read(emailsProvider.notifier)
+                      .addEmail(_emailController.text);
+                  await ref.read(emailsProvider.notifier).fetchEmails();
+
+                  ref.read(emailLoadingProvider.notifier).state = false;
+                  _emailController.clear();
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Email added successfully'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                }
+              },
+            ));
   }
 
   void _showDeleteEmailDialog(String id, String email) {
@@ -171,9 +220,7 @@ class _EmailPageState extends ConsumerState<EmailPage> {
                 );
               }
             },
-       
             label: EtzText(text: 'Delete', color: Colors.black),
-       
           ),
         ],
       ),
@@ -183,7 +230,7 @@ class _EmailPageState extends ConsumerState<EmailPage> {
   @override
   Widget build(BuildContext context) {
     final emails = ref.watch(emailsProvider);
-    final isLoading = ref.watch(emailLoadingProvider);
+    //final isLoading = ref.watch(emailLoadingProvider);
     final filteredEmails = emails
         .where((email) =>
             email.email
@@ -192,94 +239,71 @@ class _EmailPageState extends ConsumerState<EmailPage> {
             false)
         .toList();
 
-    return XcelLoader(
-      isLoading: isLoading,
-      child: Scaffold(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          title: const EtzText(
-              text: 'Email Management', fontWeight: FontWeight.bold),
-          elevation: 2,
-        ),
-        body: LiquidPullToRefresh(
+        title: const EtzText(
+            text: 'Email Management', fontWeight: FontWeight.bold),
+        elevation: 2,
+      ),
+      body: Stack(children: [
+        LiquidPullToRefresh(
           onRefresh: _handleRefresh,
           showChildOpacityTransition: false,
           child: Column(
             children: [
-              Container(
-                padding: const EdgeInsets.all(16.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      spreadRadius: 1,
-                      blurRadius: 5,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
+              SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left:20),
                       child: SizedBox(
-                        height: 48, // Match button height
+                        height: 60, // Match button height
                         child: TextField(
                           controller: _searchController,
                           decoration: InputDecoration(
                             filled: true,
                             fillColor: Colors.white,
-                          
-        
-                            hintText: 'Search emails...',
-                            prefixIcon: Padding(
+                            hintText: 'Search phone emails',
+                            suffixIcon: Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: const Image(
-                                image: AssetImage('assets/search.png'),
+                              child: Image.asset(
+                                'assets/search1.png',
                                 height: 10,
                                 width: 10,
                               ),
                             ),
                             border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(20),
-                                borderSide: BorderSide(
-                                    color: Colors.grey.shade300, width: 1.0)),
+                              borderRadius: BorderRadius.circular(15),
+                              borderSide: BorderSide(
+                                  color: Color(0xFFF4F6F9), width: 0.5),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: BorderSide(
+                                  color: Colors.grey.shade300, width: 0.5),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: BorderSide(
+                                  color: Colors.grey.shade500, width: 1.0),
+                            ),
+                            disabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: BorderSide(
+                                  color: Color(0xFFF4F6F9), width: 0.5),
+                            ),
                           ),
                           onChanged: (value) => setState(() {}),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    ElevatedButton(
-                      onPressed: _showAddEmailDialog,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.lightBlue,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Image(
-                            image: AssetImage('assets/add_email.png'),
-                            height: 24,
-                            width: 24,
-                          ),
-                          const SizedBox(width: 8),
-                          EtzText(
-                            text: 'Add email (${emails.length})',
-                            color: Colors.black,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 16),
+                  const SizedBox(width: 8),
+                ],
               ),
               Expanded(
                 child: filteredEmails.isEmpty
@@ -289,7 +313,33 @@ class _EmailPageState extends ConsumerState<EmailPage> {
             ],
           ),
         ),
-      ),
+        Positioned(
+            bottom: 50,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: SizedBox(
+                height: 40,
+                width: 120,
+                child: ElevatedButton(
+                    onPressed: _showAddDialog,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF000000),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                    child: EtzText(
+                      text: 'Add Email',
+                      color: Colors.white,
+                    )),
+              ),
+            ))
+      ]),
     );
   }
 
@@ -328,13 +378,13 @@ class _EmailPageState extends ConsumerState<EmailPage> {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: Colors.grey.shade200,
+            color: Color(0xFFF4F6F9),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             children: [
               const Image(
-                image: AssetImage('assets/email.png'),
+                image: AssetImage('assets/aaron.png'),
                 height: 40,
                 width: 40,
               ),
@@ -353,7 +403,7 @@ class _EmailPageState extends ConsumerState<EmailPage> {
                   height: 24,
                   width: 24,
                 ),
-                onPressed: () => _showDeleteEmailDialog(
+                onPressed: () => _showDeleteDialog(
                   email.id ?? '',
                   email.email ?? '',
                 ),
