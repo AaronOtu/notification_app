@@ -25,6 +25,7 @@ class _SmsPageState extends ConsumerState<SmsPage> {
   void initState() {
     super.initState();
     Future.microtask(() async {
+       if (!mounted) return;
       final isFirstVisit = ref.read(isFirstVisitProvider);
 
       if (isFirstVisit) {
