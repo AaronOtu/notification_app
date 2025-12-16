@@ -5,6 +5,7 @@ import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:notification_app/widgets/add_dialog.dart';
 import 'package:notification_app/widgets/custom_text.dart';
 import 'package:notification_app/widgets/loader.dart';
+import 'package:shimmer/shimmer.dart';
 
 final isFirstVisitProvider = StateProvider<bool>((ref) => true);
 final telegramLoadingProvider = StateProvider<bool>((ref) => false);
@@ -113,7 +114,7 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
   @override
   Widget build(BuildContext context) {
     final telegramList = ref.watch(telegramProvider);
-    //final isLoading = ref.watch(telegramLoadingProvider);
+    final isLoading = ref.watch(telegramLoadingProvider);
     final filteredTelegramList = telegramList
         .where((telegram) =>
             telegram.telegram
@@ -142,7 +143,7 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
                 children: [
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.only(left:16.0,right:16),
+                      padding: const EdgeInsets.only(left: 16.0, right: 16),
                       child: SizedBox(
                         height: 60,
                         child: TextField(
@@ -188,9 +189,11 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
                 ],
               ),
               Expanded(
-                child: filteredTelegramList.isEmpty
-                    ? _buildEmptyState()
-                    : _buildTelegramList(filteredTelegramList),
+                child: isLoading
+                    ? _buildShimmerEffect()
+                    : filteredTelegramList.isEmpty
+                        ? _buildEmptyState()
+                        : _buildTelegramList(filteredTelegramList),
               ),
             ],
           ),
@@ -223,6 +226,57 @@ class _TelegramPageState extends ConsumerState<TelegramPage> {
             ))
       ]),
     );
+  }
+
+  Widget _buildShimmerEffect() {
+    return ListView.builder(
+        padding: EdgeInsets.all(16),
+        itemCount: 10,
+        itemBuilder: (context, index) {
+          return Shimmer.fromColors(
+            baseColor: Color(0xFFF4F6F9),
+            highlightColor: Colors.grey[100]!,
+            period: Duration(seconds: 2),
+            child: Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.2),
+                      spreadRadius: 2,
+                      blurRadius: 5,
+                      offset: Offset(0, 3), // changes position of shadow
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      color: Colors.grey[300],
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Container(
+                        height: 16,
+                        color: Colors.grey[300],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Container(
+                      width: 24,
+                      height: 24,
+                      color: Colors.grey[300],
+                    ),
+                  ],
+                )),
+          );
+        });
   }
 
   Widget _buildEmptyState() {

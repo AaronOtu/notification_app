@@ -1,0 +1,1 @@
+/Users/macbook/Development/MobileApps/etranzact/notification_app/build/app/intermediates/cxx/RelWithDebInfo/s6p5l4o2/obj/x86

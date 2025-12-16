@@ -6,6 +6,7 @@ import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:notification_app/widgets/add_dialog.dart';
 import 'package:notification_app/widgets/custom_text.dart';
 import 'package:notification_app/widgets/loader.dart';
+import 'package:shimmer/shimmer.dart';
 
 final isFirstVisitProvider = StateProvider<bool>((ref) => true);
 final smsLoadingProvider = StateProvider<bool>((ref) => false);
@@ -25,7 +26,7 @@ class _SmsPageState extends ConsumerState<SmsPage> {
   void initState() {
     super.initState();
     Future.microtask(() async {
-       if (!mounted) return;
+      if (!mounted) return;
       final isFirstVisit = ref.read(isFirstVisitProvider);
 
       if (isFirstVisit) {
@@ -118,7 +119,7 @@ class _SmsPageState extends ConsumerState<SmsPage> {
   @override
   Widget build(BuildContext context) {
     final smsList = ref.watch(smsProvider);
-    //final isLoading = ref.watch(smsLoadingProvider);
+    final isLoading = ref.watch(smsLoadingProvider);
     final filteredSmsList = smsList
         .where((sms) =>
             sms.sms
@@ -196,7 +197,11 @@ class _SmsPageState extends ConsumerState<SmsPage> {
                 ],
               ),
               Expanded(
-                child: filteredSmsList.isEmpty
+                child: isLoading
+                ? _buildShimmerEffect():
+                
+                
+                filteredSmsList.isEmpty
                     ? _buildEmptyState()
                     : _buildSmsList(filteredSmsList),
               ),
@@ -231,6 +236,57 @@ class _SmsPageState extends ConsumerState<SmsPage> {
             ))
       ]),
     );
+  }
+
+  Widget _buildShimmerEffect() {
+    return ListView.builder(
+        padding: EdgeInsets.all(16),
+        itemCount: 10,
+        itemBuilder: (context, index) {
+          return Shimmer.fromColors(
+            baseColor: Color(0xFFF4F6F9),
+            highlightColor: Colors.grey[100]!,
+            period: Duration(seconds:2),
+            child: Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                   boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.2),
+                spreadRadius: 2,
+                blurRadius: 5,
+                offset: Offset(0, 3), // changes position of shadow
+              ),
+            ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      color: Colors.grey[300],
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Container(
+                        height: 16,
+                        color: Colors.grey[300],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Container(
+                      width: 24,
+                      height: 24,
+                      color: Colors.grey[300],
+                    ),
+                  ],
+                )),
+          );
+        });
   }
 
   Widget _buildEmptyState() {

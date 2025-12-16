@@ -16,6 +16,7 @@ import 'package:notification_app/screens/telegram_page.dart';
 import 'package:notification_app/widgets/custom_container.dart';
 import 'package:notification_app/widgets/custom_text.dart';
 import 'package:notification_app/widgets/loader.dart';
+import 'package:shimmer/shimmer.dart';
 
 // --------------------------- Providers ---------------------------
 
@@ -578,6 +579,82 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
+Widget _buildShimmerEffect() {
+  return ListView.builder(
+    padding: const EdgeInsets.all(8.0),
+    itemCount: 6, // Number of shimmer items to show
+    itemBuilder: (context, index) {
+      return Shimmer.fromColors(
+        baseColor: const Color(0xFFF4F6F9),
+        highlightColor: Colors.grey[100]!,
+        period: const Duration(seconds: 2),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.2),
+                spreadRadius: 2,
+                blurRadius: 5,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 60,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    width: 80,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                width: 200,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+
+
   Widget _buildTabBar() {
     return Container(
       margin: const EdgeInsets.all(8.0),
@@ -687,7 +764,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               },
             );
           },
-          loading: () => const SizedBox.shrink(),
+          loading: () => _buildShimmerEffect(),         //const SizedBox.shrink(),
           error: (error, stack) => _buildErrorWidget(error),
         );
       },

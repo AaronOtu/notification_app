@@ -1,0 +1,2 @@
+/Users/macbook/Development/MobileApps/etranzact/notification_app/android/app/.cxx/RelWithDebInfo/s6p5l4o2/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/macbook/Development/MobileApps/etranzact/notification_app/android/app/.cxx/RelWithDebInfo/s6p5l4o2/armeabi-v7a/CMakeFiles/rebuild_cache.dir
